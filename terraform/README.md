@@ -1,7 +1,9 @@
 # The Terraform part
 
 The work in this folder:
-* proves that the [terra-faram/virtualbox](https://github.com/terra-farm/terraform-provider-virtualbox) terraform provider simply does not work, on Git bash for windows, if it ever worked at all.
+
+* proves that the [terra-faram/virtualbox](https://github.com/terra-farm/terraform-provider-virtualbox) terraform provider can work, but only with very limited features. It cannot be used for example, to provision a VM from a PXEless prepared virtual disk.
+
 * It also is a base to analyze the design of that provider, and find improvements, for a complete new implementation of a terraform provider making it possible to fully manage virtualbox-based virtual machines.
 
 This work also was the opportunity to definitely prove how to use the `dev_orverrides` terraform configuration, with today's recent versions of terraform.
@@ -675,6 +677,225 @@ terraform apply -auto-approve "my.first.powershell.destroy.plan.tfplan"
 ```
 
 ![neat destroy](./docs/images/vbox_net_bridge_adapter/success_with_one_interface_started_headless_mode_neat_destroy.PNG)
+
+
+Finally, I tested creating the same VM, but with 2 network interfaecs, instead of just 1:
+
+* The first virtual NIC of my VM is set to use my other host network adapter (a LAN Network with DHCP on my personal copper cable router).
+* The second virtual NIC of my VM is set to use my TP Link Wifi Adapter as host network adapter
+* I also tested the other way around, with my TP Link USB WIFI Adapter, for the first virtual NIC of my network adapter, and in both cases, he result is the same: The terraform waits forever that an ip address becomes available, and the VM is nevertheless properly created. That is definitely not satisfying, and the rprovider does not suport multiple virtual NICs per VMs. See the below logs showing in debug mode what the provider does, in this case:
+
+```bash
+PS C:\Users\Utilisateur\packman\terraform> terraform apply -auto-approve "my.first.powershell.plan.tfplan"
+2024-02-25T19:29:18.777+0100 [INFO]  Terraform version: 1.3.0
+2024-02-25T19:29:18.796+0100 [DEBUG] using github.com/hashicorp/go-tfe v1.9.0
+2024-02-25T19:29:18.798+0100 [DEBUG] using github.com/hashicorp/hcl/v2 v2.14.0
+2024-02-25T19:29:18.802+0100 [DEBUG] using github.com/hashicorp/terraform-config-inspect v0.0.0-20210209133302-4fd17a0faac2
+2024-02-25T19:29:18.802+0100 [DEBUG] using github.com/hashicorp/terraform-svchost v0.0.0-20200729002733-f050f53b9734
+2024-02-25T19:29:18.803+0100 [DEBUG] using github.com/zclconf/go-cty v1.11.0
+2024-02-25T19:29:18.803+0100 [INFO]  Go runtime version: go1.19.1
+2024-02-25T19:29:18.804+0100 [INFO]  CLI args: []string{"C:\\ProgramData\\chocolatey\\lib\\terraform\\tools\\terraform.exe", "apply", "-auto-approve", "my.first.powershell.plan.tfplan"}
+2024-02-25T19:29:18.804+0100 [DEBUG] Attempting to open CLI config file: ./.dev.tfrc
+2024-02-25T19:29:18.805+0100 [INFO]  Loading CLI configuration from ./.dev.tfrc
+2024-02-25T19:29:18.805+0100 [DEBUG] Not reading CLI config directory because config location is overridden by environment variable
+2024-02-25T19:29:18.808+0100 [DEBUG] Explicit provider installation configuration is set
+2024-02-25T19:29:18.808+0100 [INFO]  CLI command args: []string{"apply", "-auto-approve", "my.first.powershell.plan.tfplan"}
+2024-02-25T19:29:18.810+0100 [DEBUG] Provider registry.terraform.io/terra-farm/virtualbox is overridden by dev_overrides
+2024-02-25T19:29:18.810+0100 [DEBUG] Provider registry.terraform.io/terra-farm/virtualbox is overridden to load from .terraform.d\customised-providers\terraform-provider-virtualbox\bidule
+2024-02-25T19:29:18.812+0100 [DEBUG] checking for provisioner in "."
+2024-02-25T19:29:18.813+0100 [DEBUG] checking for provisioner in "C:\\ProgramData\\chocolatey\\lib\\terraform\\tools"
+2024-02-25T19:29:18.813+0100 [DEBUG] Provider registry.terraform.io/terra-farm/virtualbox is overridden by dev_overrides
+╷
+│ Warning: Provider development overrides are in effect
+│
+│ The following provider development overrides are set in the CLI configuration:
+│  - terra-farm/virtualbox in .terraform.d\customised-providers\terraform-provider-virtualbox\bidule
+│
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to
+│ become incompatible with published releases.
+╵
+2024-02-25T19:29:18.814+0100 [INFO]  backend/local: starting Apply operation
+2024-02-25T19:29:18.822+0100 [DEBUG] Config.VerifyDependencySelections: skipping registry.terraform.io/terra-farm/virtualbox because it's overridden by a special configuration setting
+2024-02-25T19:29:18.827+0100 [DEBUG] created provider logger: level=debug
+2024-02-25T19:29:18.827+0100 [INFO]  provider: configuring client automatic mTLS
+2024-02-25T19:29:18.855+0100 [DEBUG] provider: starting plugin: path=.terraform.d/customised-providers/terraform-provider-virtualbox/bidule/terraform-provider-virtualbox_v0.2.2-alpha.1 args=[.terraform.d/customised-providers/terraform-provider-virtualbox/bidule/terraform-provider-virtualbox_v0.2.2-alpha.1]
+2024-02-25T19:29:18.860+0100 [DEBUG] provider: plugin started: path=.terraform.d/customised-providers/terraform-provider-virtualbox/bidule/terraform-provider-virtualbox_v0.2.2-alpha.1 pid=4044
+2024-02-25T19:29:18.861+0100 [DEBUG] provider: waiting for RPC address: path=.terraform.d/customised-providers/terraform-provider-virtualbox/bidule/terraform-provider-virtualbox_v0.2.2-alpha.1
+2024-02-25T19:29:18.902+0100 [INFO]  provider.terraform-provider-virtualbox_v0.2.2-alpha.1: configuring server automatic mTLS: timestamp=2024-02-25T19:29:18.882+0100
+2024-02-25T19:29:18.924+0100 [DEBUG] provider: using plugin: version=5
+2024-02-25T19:29:18.924+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: plugin address: address=127.0.0.1:10001 network=tcp timestamp=2024-02-25T19:29:18.923+0100
+2024-02-25T19:29:18.947+0100 [DEBUG] No provider meta schema returned
+2024-02-25T19:29:18.948+0100 [DEBUG] provider.stdio: received EOF, stopping recv loop: err="rpc error: code = Unavailable desc = error reading from server: EOF"
+2024-02-25T19:29:18.987+0100 [DEBUG] provider: plugin process exited: path=.terraform.d/customised-providers/terraform-provider-virtualbox/bidule/terraform-provider-virtualbox_v0.2.2-alpha.1 pid=4044
+2024-02-25T19:29:18.987+0100 [DEBUG] provider: plugin exited
+2024-02-25T19:29:18.990+0100 [INFO]  backend/local: apply calling Apply
+2024-02-25T19:29:18.990+0100 [DEBUG] Building and walking apply graph for NormalMode plan
+2024-02-25T19:29:18.999+0100 [DEBUG] Resource state not found for node "virtualbox_vm.debian_vm[0]", instance virtualbox_vm.debian_vm[0]
+2024-02-25T19:29:18.999+0100 [DEBUG] ProviderTransformer: "virtualbox_vm.debian_vm (expand)" (*terraform.nodeExpandApplyableResource) needs provider["registry.terraform.io/terra-farm/virtualbox"]
+2024-02-25T19:29:18.999+0100 [DEBUG] ProviderTransformer: "virtualbox_vm.debian_vm[0]" (*terraform.NodeApplyableResourceInstance) needs provider["registry.terraform.io/terra-farm/virtualbox"]
+2024-02-25T19:29:19.000+0100 [DEBUG] ReferenceTransformer: "virtualbox_vm.debian_vm (expand)" references: []
+2024-02-25T19:29:19.000+0100 [DEBUG] ReferenceTransformer: "output.IPAddr (expand)" references: [virtualbox_vm.debian_vm[0]]
+2024-02-25T19:29:19.001+0100 [DEBUG] ReferenceTransformer: "virtualbox_vm.debian_vm[0]" references: []
+2024-02-25T19:29:19.001+0100 [DEBUG] ReferenceTransformer: "provider[\"registry.terraform.io/terra-farm/virtualbox\"]" references: []
+2024-02-25T19:29:19.002+0100 [DEBUG] Starting graph walk: walkApply
+2024-02-25T19:29:19.002+0100 [DEBUG] created provider logger: level=debug
+2024-02-25T19:29:19.003+0100 [INFO]  provider: configuring client automatic mTLS
+2024-02-25T19:29:19.015+0100 [DEBUG] provider: starting plugin: path=.terraform.d/customised-providers/terraform-provider-virtualbox/bidule/terraform-provider-virtualbox_v0.2.2-alpha.1 args=[.terraform.d/customised-providers/terraform-provider-virtualbox/bidule/terraform-provider-virtualbox_v0.2.2-alpha.1]
+2024-02-25T19:29:19.019+0100 [DEBUG] provider: plugin started: path=.terraform.d/customised-providers/terraform-provider-virtualbox/bidule/terraform-provider-virtualbox_v0.2.2-alpha.1 pid=12924
+2024-02-25T19:29:19.020+0100 [DEBUG] provider: waiting for RPC address: path=.terraform.d/customised-providers/terraform-provider-virtualbox/bidule/terraform-provider-virtualbox_v0.2.2-alpha.1
+2024-02-25T19:29:19.063+0100 [INFO]  provider.terraform-provider-virtualbox_v0.2.2-alpha.1: configuring server automatic mTLS: timestamp=2024-02-25T19:29:19.042+0100
+2024-02-25T19:29:19.082+0100 [DEBUG] provider: using plugin: version=5
+2024-02-25T19:29:19.083+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: plugin address: address=127.0.0.1:10001 network=tcp timestamp=2024-02-25T19:29:19.082+0100
+2024-02-25T19:29:19.105+0100 [DEBUG] No provider meta schema returned
+2024-02-25T19:29:19.111+0100 [WARN]  Provider "registry.terraform.io/terra-farm/virtualbox" produced an invalid plan for virtualbox_vm.debian_vm[0], but we are tolerating it because it is using the legacy plugin SDK.
+    The following problems may be the cause of any confusing errors from downstream operations:
+      - .status: planned value cty.StringVal("running") for a non-computed attribute
+      - .network_adapter[0].device: planned value cty.StringVal("IntelPro1000MTServer") for a non-computed attribute
+      - .network_adapter[1].device: planned value cty.StringVal("IntelPro1000MTServer") for a non-computed attribute
+virtualbox_vm.debian_vm[0]: Creating...
+2024-02-25T19:29:19.118+0100 [INFO]  Starting apply for virtualbox_vm.debian_vm[0]
+2024-02-25T19:29:19.118+0100 [DEBUG] virtualbox_vm.debian_vm[0]: applying the planned Create change
+virtualbox_vm.debian_vm[0]: Still creating... [10s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [20s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [30s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [40s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [50s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [1m0s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [1m10s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [1m20s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [1m30s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [1m40s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [1m50s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [2m0s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [2m10s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [2m20s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [2m30s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [2m40s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [2m50s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [3m0s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [3m10s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [3m20s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [3m30s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [3m40s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [3m50s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [4m0s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [4m10s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [4m20s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [4m30s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [4m40s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [4m50s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [5m0s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [5m10s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [5m20s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [5m30s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [5m40s elapsed]
+2024-02-25T19:35:08.286+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stdout="Virtual machine 'debian_vm' is created and registered.
+UUID: c26ea0c0-53da-408f-ae58-60f1af66d360
+Settings file: 'C:\Users\Utilisateur\.terraform\virtualbox\machine\debian_vm\debian_vm.vbox'"
+2024-02-25T19:35:08.426+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stderr=0
+2024-02-25T19:35:08.426+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stderr=%...
+virtualbox_vm.debian_vm[0]: Still creating... [5m50s elapsed]
+2024-02-25T19:35:13.980+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stderr=10
+2024-02-25T19:35:13.980+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stderr=%...20%...30%...40%...50%...60%...70%...80%...90%...
+2024-02-25T19:35:14.145+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stderr=100
+2024-02-25T19:35:14.146+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stderr=%
+2024-02-25T19:35:14.151+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stdout="Clone medium created in format 'VMDK'. UUID: fcc16f44-6539-41c2-8586-2b3991c57fcd"
+2024-02-25T19:35:14.294+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stderr=0
+2024-02-25T19:35:14.294+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stderr=%...
+2024-02-25T19:35:14.357+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stderr=10
+2024-02-25T19:35:14.357+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stderr=%...20%...30%...40%...50%...60%...70%...
+2024-02-25T19:35:14.357+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stderr=80%...90%...
+2024-02-25T19:35:14.358+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stderr=100
+2024-02-25T19:35:14.358+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stderr=%
+2024-02-25T19:35:14.360+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stdout="Clone medium created in format 'VMDK'. UUID: 9ec22adc-48ca-4024-96eb-06a2d5561073"
+2024-02-25T19:35:15.487+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-resource_vm.go:605: [DEBUG] Network adapter: {Network:bridged Hardware:82545EM HostInterface:Intel(R) Ethernet Connection I217-LM MacAddr:}
+2024-02-25T19:35:15.488+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-resource_vm.go:605: [DEBUG] Network adapter: {Network:bridged Hardware:82545EM HostInterface:TP-Link Wireless USB Adapter MacAddr:}
+virtualbox_vm.debian_vm[0]: Still creating... [6m0s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [6m10s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [6m20s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [6m30s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [6m40s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [6m50s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [7m0s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [7m10s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [7m20s elapsed]
+2024-02-25T19:36:46.006+0100 [WARN]  unexpected data: registry.terraform.io/terra-farm/virtualbox:stdout="Waiting for VM "debian_vm" to power on...
+VM "debian_vm" has been successfully started."
+2024-02-25T19:36:46.016+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-resource_vm.go:335: [DEBUG] Resource ID: c26ea0c0-53da-408f-ae58-60f1af66d360
+2024-02-25T19:36:46.016+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-resource_vm.go:813: [INFO] Waiting for VM (debian_vm) to have network_adapter.0.ipv4_address_available of [yes]
+2024-02-25T19:36:46.017+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:52: [DEBUG] Waiting for state to become: [yes]
+virtualbox_vm.debian_vm[0]: Still creating... [7m30s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [7m40s elapsed]
+virtualbox_vm.debian_vm[0]: Still creating... [7m50s elapsed]
+2024-02-25T19:37:16.166+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 1s before next try
+2024-02-25T19:37:17.311+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 2s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [8m0s elapsed]
+2024-02-25T19:37:19.427+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 4s before next try
+2024-02-25T19:37:23.577+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 8s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [8m10s elapsed]
+2024-02-25T19:37:31.747+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [8m20s elapsed]
+2024-02-25T19:37:41.910+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [8m30s elapsed]
+2024-02-25T19:37:52.055+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [8m40s elapsed]
+2024-02-25T19:38:02.219+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [8m50s elapsed]
+2024-02-25T19:38:12.354+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [9m0s elapsed]
+2024-02-25T19:38:22.501+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [9m10s elapsed]
+2024-02-25T19:38:32.614+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [9m20s elapsed]
+2024-02-25T19:38:42.846+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [9m30s elapsed]
+2024-02-25T19:38:52.963+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [9m40s elapsed]
+2024-02-25T19:39:03.120+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [9m50s elapsed]
+2024-02-25T19:39:13.269+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [10m0s elapsed]
+2024-02-25T19:39:23.406+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [10m10s elapsed]
+2024-02-25T19:39:33.579+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [10m20s elapsed]
+2024-02-25T19:39:43.775+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [10m30s elapsed]
+2024-02-25T19:39:53.959+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [10m40s elapsed]
+2024-02-25T19:40:04.117+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [10m50s elapsed]
+2024-02-25T19:40:14.279+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [11m0s elapsed]
+2024-02-25T19:40:24.412+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [11m10s elapsed]
+2024-02-25T19:40:34.533+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [11m20s elapsed]
+2024-02-25T19:40:44.678+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [11m30s elapsed]
+2024-02-25T19:40:54.851+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [11m40s elapsed]
+2024-02-25T19:41:05.013+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [11m50s elapsed]
+2024-02-25T19:41:15.158+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [12m0s elapsed]
+2024-02-25T19:41:25.298+0100 [DEBUG] provider.terraform-provider-virtualbox_v0.2.2-alpha.1: pid-12924-state.go:193: [TRACE] Waiting 10s before next try
+virtualbox_vm.debian_vm[0]: Still creating... [12m10s elapsed]
+Stopping operation...
+2024-02-25T19:41:31.080+0100 [WARN]  terraform: Stop called, initiating interrupt sequence
+PS C:\Users\Utilisateur\packman\terraform>
+```
+
+Other aspects, I would like to customize :
+
+* The disks attached to the VM: For the moment, I know how to attached an ISO file to the VM, with the `optical_disks` device, but not how to create disks, and attache several one of them to the VM
+
+* The boot order: neither do I know how to customize the boot order. Its apparently possible to do that, see https://github.com/terra-farm/terraform-provider-virtualbox/blob/ea0eae238c87eddebea4eeae2a509907e450412b/internal/provider/resource_vm.go#L152C5-L152C15
+
+* I tried different vagrant boxes, and here are the resuls I got
+  * [x] KO, the terraform runs forever without being able to create any VM (worse its not stable, i tried twice and the VM was created only in one of the two tries): <https://app.vagrantup.com/generic/boxes/debian12/versions/4.3.12/providers/virtualbox.box>
+  * [x] OK, with the old example vagrant box for Ubuntu, it worked : <https://app.vagrantup.com/ubuntu/boxes/bionic64/versions/20180903.0.0/providers/virtualbox.box>
+  * [ ] TODO with the most recent release of Ubuntu bionic : <https://app.vagrantup.com/ubuntu/boxes/bionic64/versions/20230607.0.0/providers/virtualbox.box>
 
 ## Conclusions
 
