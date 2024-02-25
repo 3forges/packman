@@ -12,9 +12,7 @@ resource "virtualbox_vm" "debian_vm" {
     # type           = "hostonly"
     type = "bridged"
     # host_interface = "vboxnet1"
-    # host_interface = "enp3s0"
-    host_interface = "TP-Link Wireless USB Adapter"
-    # device = "enp3s0"
+    host_interface = "enp3s0"
     # device = "HostInterfaceNetworking-TP-Link Wireless USB Adapter"
     # device = "TP-Link Wireless USB Adapter"
   }

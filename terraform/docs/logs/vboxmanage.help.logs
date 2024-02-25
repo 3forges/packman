@@ -1,0 +1,118 @@
+Oracle VM VirtualBox Command Line Management Interface Version 7.0.6
+Copyright (C) 2005-2023 Oracle and/or its affiliates
+
+VBoxManage.exe: error: Not enough parameters
+
+Usage - Change settings for a virtual machine that is stopped:
+
+  VBoxManage modifyvm <uuid | vmname> [--name=name] [--groups= group[,group...]
+      ] [--description=description] [--os-type=OS-type] [--icon-file=filename]
+      [--memory=size-in-MB] [--page-fusion= on | off ] [--vram=size-in-MB]
+      [--acpi= on | off ] [--ioapic= on | off ] [--hardware-uuid=UUID]
+      [--cpus=CPU-count] [--cpu-hotplug= on | off ] [--plug-cpu=CPU-ID]
+      [--unplug-cpu=CPU-ID] [--cpu-execution-cap=number] [--pae= on | off ]
+      [--long-mode= on | off ] [--ibpb-on-vm-exit= on | off ]
+      [--ibpb-on-vm-entry= on | off ] [--spec-ctrl= on | off ]
+      [--l1d-flush-on-sched= on | off ] [--l1d-flush-on-vm-entry= on | off ]
+      [--mds-clear-on-sched= on | off ] [--mds-clear-on-vm-entry= on | off ]
+      [--cpu-profile= host | Intel 8086 | Intel 80286 | Intel 80386 ] [--hpet=
+      on | off ] [--hwvirtex= on | off ] [--triple-fault-reset= on | off ]
+      [--apic= on | off ] [--x2apic= on | off ] [--paravirt-provider= none |
+      default | legacy | minimal | hyperv | kvm ] [--paravirt-debug=
+      key=value[,key=value...] ] [--nested-paging= on | off ] [--large-pages=
+      on | off ] [--vtx-vpid= on | off ] [--vtx-ux= on | off ]
+      [--nested-hw-virt= on | off ] [--virt-vmsave-vmload= on | off ]
+      [--accelerate-3d= on | off ] [--accelerate-2d-video= on | off ]
+      [--chipset= ich9 | piix3 ] [--iommu= none | automatic | amd | intel ]
+      [--tpm-type= none | 1.2 | 2.0 | host | swtpm ] [--tpm-location= location
+      ] [--bios-logo-fade-in= on | off ] [--bios-logo-fade-out= on | off ]
+      [--bios-logo-display-time=msec] [--bios-logo-image-path=pathname]
+      [--bios-boot-menu= disabled | menuonly | messageandmenu ] [--bios-apic=
+      disabled | apic | x2apic ] [--bios-system-time-offset=msec]
+      [--bios-pxe-debug= on | off ] [--system-uuid-le= on | off ] [--bootX=
+      none | floppy | dvd | disk | net ] [--rtc-use-utc= on | off ]
+      [--graphicscontroller= none | vboxvga | vmsvga | vboxsvga ]
+      [--snapshot-folder= default | pathname ] [--firmware= bios | efi | efi32
+      | efi64 ] [--guest-memory-balloon=size-in-MB] [--default-frontend=
+      default | name ] [--vm-process-priority= default | flat | low | normal |
+      high ]
+
+  VBoxManage modifyvm <uuid | vmname> [--nicN= none | null | nat | bridged |
+      intnet | hostonly | hostonlynet | generic | natnetwork | cloud ]
+      [--nic-typeN= Am79C970A | Am79C973 | 82540EM | 82543GC | 82545EM | virtio
+      ] [--cable-connectedN= on | off ] [--nic-traceN= on | off ]
+      [--nic-trace-fileN=filename] [--nic-propertyN=name= [value] ]
+      [--nic-speedN=kbps] [--nic-boot-prioN=priority] [--nic-promiscN= deny |
+      allow-vms | allow-all ] [--nic-bandwidth-groupN= none | name ]
+      [--bridge-adapterN= none | device-name ] [--cloud-networkN=network-name]
+      [--host-only-adapterN= none | device-name ]
+      [--host-only-netN=network-name] [--intnetN=network-name]
+      [--nat-networkN=network-name] [--nic-generic-drvN=driver-name]
+      [--mac-addressN= auto | MAC-address ]
+
+  VBoxManage modifyvm <uuid | vmname> [--nat-netN= network | default ]
+      [--nat-pfN= [rule-name],tcp | udp,[host-IP],hostport,[guest-IP],guestport
+      ] [--nat-pfN=delete=rule-name] [--nat-tftp-prefixN=prefix]
+      [--nat-tftp-fileN=filename] [--nat-tftp-serverN=IP-address]
+      [--nat-bind-ipN=IP-address] [--nat-dns-pass-domainN= on | off ]
+      [--nat-dns-proxyN= on | off ] [--nat-dns-host-resolverN= on | off ]
+      [--nat-localhostreachableN= on | off ]
+      [--nat-settingsN=[mtu],[socksnd],[sockrcv],[tcpsnd],[tcprcv]]
+      [--nat-alias-modeN= default | [log],[proxyonly],[sameports] ]
+
+  VBoxManage modifyvm <uuid | vmname> [--mouse= ps2 | usb | usbtablet |
+      usbmultitouch | usbmtscreenpluspad ] [--keyboard= ps2 | usb ] [--uartN=
+      off | IO-baseIRQ ] [--uart-modeN= disconnected | serverpipe | clientpipe
+      | tcpserverport | tcpclienthostname:port | filefilename | device-name ]
+      [--uart-typeN= 16450 | 16550A | 16750 ] [--lpt-modeN=device-name]
+      [--lptN= off | IO-baseIRQ ] [--audio-controller= ac97 | hda | sb16 ]
+      [--audio-codec= stac9700 | ad1980 | stac9221 | sb16 ] [--audio-driver=
+      none | default | null | dsound | was | oss | alsa | pulse | coreaudio ]
+      [--audio-enabled= on | off ] [--audio-in= on | off ] [--audio-out= on |
+      off ] [--clipboard-mode= disabled | hosttoguest | guesttohost |
+      bidirectional ] [--drag-and-drop= disabled | hosttoguest | guesttohost |
+      bidirectional ] [--monitor-count=number] [--usb-ehci= on | off ]
+      [--usb-ohci= on | off ] [--usb-xhci= on | off ]
+      [--usb-rename=old-namenew-name]
+
+  VBoxManage modifyvm <uuid | vmname> [--recording= on | off ]
+      [--recording-screens= all | none | screen-ID[,screen-ID...] ]
+      [--recording-file=filename] [--recording-max-size=MB]
+      [--recording-max-time=msec] [--recording-opts= key=value[,key=value...] ]
+      [--recording-video-fps=fps] [--recording-video-rate=rate]
+      [--recording-video-res=widthheight]
+
+  VBoxManage modifyvm <uuid | vmname> [--vrde= on | off ]
+      [--vrde-property=property-name= [property-value] ] [--vrde-extpack=
+      default | name ] [--vrde-port=port] [--vrde-address=hostip]
+      [--vrde-auth-type= null | external | guest ] [--vrde-auth-library=
+      default | name ] [--vrde-multi-con= on | off ] [--vrde-reuse-con= on |
+      off ] [--vrde-video-channel= on | off ]
+      [--vrde-video-channel-quality=percent]
+
+  VBoxManage modifyvm <uuid | vmname> [--teleporter= on | off ]
+      [--teleporter-port=port] [--teleporter-address= address | empty ]
+      [--teleporter-password=password] [--teleporter-password-file= filename |
+      stdin ] [--cpuid-portability-level=level] [--cpuid-set=leaf [:subleaf]
+      eax ebx ecx edx] [--cpuid-remove=leaf [:subleaf] ]
+      [--cpuid-remove-all]
+
+  VBoxManage modifyvm <uuid | vmname> [--tracing-enabled= on | off ]
+      [--tracing-config=string] [--tracing-allow-vm-access= on | off ]
+
+  VBoxManage modifyvm <uuid | vmname> [--usb-card-reader= on | off ]
+
+  VBoxManage modifyvm <uuid | vmname> [--autostart-enabled= on | off ]
+      [--autostart-delay=seconds]
+
+  VBoxManage modifyvm <uuid | vmname> [--guest-debug-provider= none | native |
+      gdb | kd ] [--guest-debug-io-provider= none | tcp | udp | ipc ]
+      [--guest-debug-address= IP-Address | path ] [--guest-debug-port=port]
+
+  VBoxManage modifyvm <uuid | vmname> [--pci-attach=host-PCI-address
+      [@guest-PCI-bus-address] ] [--pci-detach=host-PCI-address]
+
+  VBoxManage modifyvm <uuid | vmname> [--testing-enabled= on | off ]
+      [--testing-mmio= on | off ] [--testing-cfg-dwordidx=value]
+
+VBoxManage.exe: error: Not enough parameters
