@@ -599,8 +599,6 @@ VBoxManage.exe: error: Details: code VBOX_E_INVALID_OBJECT_STATE (0x80bb0007), c
 VBoxManage.exe: error: Context: "LockMachine(a->session, LockType_Write)" at line 641 of file VBoxManageModifyVM.cpp
 ```
 
-
-
 Note that there is something extremely interesting, to check: from VirtualBox version 6, to VirtualBox version 7, the VBoxManage command option to change the host network adapter, changed.
 
 * For VirtualBox 6, the option is `--bridgeadapter<1-N>`:
@@ -667,6 +665,16 @@ And with all this work, now the terraform provider does create a VM with the exa
 I sometimes hear people discussing what being a Devops is, and that, is a pragmatic way to demo you what it means, to be a devops:
 
 If we have to dive into the code, we will, and if we need to change the ocde so that the infrastructure will work, as we decide, oh  you bet we will.
+
+Now let's neatly destroy our VM:
+
+```Powershell
+terraform plan -destroy -out="my.first.powershell.destroy.plan.tfplan"
+
+terraform apply -auto-approve "my.first.powershell.destroy.plan.tfplan"
+```
+
+![neat destroy](./docs/images/vbox_net_bridge_adapter/success_with_one_interface_started_headless_mode_neat_destroy.PNG)
 
 ## Conclusions
 
