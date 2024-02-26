@@ -120,15 +120,15 @@ $Env:TF_LOG = "debug"
 terraform validate
 terraform fmt
 
-terraform plan -out=my.first.powershell.plan.tfplan
+terraform plan -out="my.first.powershell.plan.tfplan"
 terraform apply -auto-approve "my.first.powershell.plan.tfplan"
+
 
 ```
 
 ## Results
 
-We have tested the latest release of the terrafarm virtualbox provider, the `0.2.2-alpha.1` release, both in Git bash for windows, and powershell, with a full build from source of the terraform provider.
-
+We have tested the latest release of the `terra-farm/virtualbox` `terraform` provider, the `0.2.2-alpha.1` release, both in Git bash for windows, and powershell, with a full build from source of the `terraform` provider.
 
 ### Deprecated version of terraform SDK
 
@@ -886,26 +886,157 @@ Stopping operation...
 PS C:\Users\Utilisateur\packman\terraform>
 ```
 
+### Local folder configuration
+
+* In the `resource_vm.go` source code file, in the `resourceVMCreate` function definition, at lines `201` and `202`, you can find those instructions:
+
+```Golang
+	goldFolder := filepath.Join(usr.HomeDir, ".terraform/virtualbox/gold")
+	machineFolder := filepath.Join(usr.HomeDir, ".terraform/virtualbox/machine")
+```
+
+* Therefore, the `terraform` provider, uses two different folders on your machine:
+  * The first, has a path set to `${HOME}/.terraform/virtualbox/gold/virtualbox/`, and will contain the files deflated from the so called _"VagrantBox"_: the `Vagrantfile`, the `box.ovf`, the `info.json` file, the `*.vmdk` virtual disk file (eg `generic-debian12-virtualbox-x64-disk001.vmdk`), the `metadata.json` file.
+  * The second one, has a path set to `${HOME}/.terraform/virtualbox/machine`: This folder is used by the terraform provider, to store the files resulting of the imported virtualbox machine, and a copy of the virtual disk file (like a VMDK one).
+
+```bash
+$ ls -alh ~/.terraform/virtualbox/gold/virtualbox/
+total 1.2G
+drwxr-xr-x 1 <your user name> 197121    0 Feb 26 21:45 ./
+drwxr-xr-x 1 <your user name> 197121    0 Feb 26 21:45 ../
+-rw-r--r-- 1 <your user name> 197121 2.0K Jan 10 05:36 Vagrantfile
+-rw-r--r-- 1 <your user name> 197121 6.7K Jan 10 05:36 box.ovf
+-rw-r--r-- 1 <your user name> 197121 1.2G Feb 26 21:45 generic-debian12-virtualbox-x64-disk001.vmdk
+-rw-r--r-- 1 <your user name> 197121  301 Jan 10 05:36 info.json
+-rw-r--r-- 1 <your user name> 197121   49 Jan 10 05:36 metadata.json
+$ ls -alh ~/.terraform/virtualbox/machine/debian_vm/
+total 3.4G
+drwxr-xr-x 1 <your user name> 197121    0 Feb 26 22:39 ./
+drwxr-xr-x 1 <your user name> 197121    0 Feb 26 21:45 ../
+drwxr-xr-x 1 <your user name> 197121    0 Feb 26 22:24 Logs/
+-rw-r--r-- 1 <your user name> 197121 2.6K Feb 26 22:39 debian_vm.vbox
+-rw-r--r-- 1 <your user name> 197121 3.1K Feb 26 22:24 debian_vm.vbox-prev
+-rw-r--r-- 1 <your user name> 197121 3.4G Feb 26 22:39 generic-debian12-virtualbox-x64-disk001.vmdk
+
+```
+
+The fact that the path of those two folder, is not confgurable in any way, is bad for two important reasons:
+
+* It makes the provider hard to troubleshoot:
+  * If I run terraform with that provider, and the terraform execution completes with error,
+  * then the terraform state ends up in a stale state. And it is not possible to run terraform destroy anymore.
+  * So that to go back to the intial state, to run again the terraform, You do not have a choice but to run a specific sequence of manual operations (that are not documented):
+    * you have to delete the VM using the VirtualBox UI
+    * then you have to run a command (powershell or git bash) to delete and recreate empty, the _"gold"_ folder `rm -fr ${HOME}/.terraform/gold` or `rm -r ${HOME}/.terraform/gold`
+    * then may even have to run a command to delete
+* If you :
+  * successfully provision the VM, with an ubuntu image,
+  * and then you terraform destroy it
+  * then change only one thing in the terraform code, the `image` property, to change the OS to Ubuntu for example, without changing the name of the VM as a resource
+  * and then you run terraform apply,
+  * the result is that you end end with a new VM, with... Ubuntu installed.
+  * That is only cause by the provider source code design, how it makes uses of the local machine folders.
+  * The provider does this, as a poor design, to avoid downloading twice an already download big file: the VAgrant box of the OS. Note that I tested successfully terraforming the VM with a Debian Bookworm OS, and it took 27 minutes, mainly because of the download time. This time, this not the Keep it Stupid, and Stupid principle.
+  * What happens there is very simple: the terraform destroy does not delete the `${HOME}/.terraform/gold/virtualbox` folder, it keeps it as is, and we understand why: to avoid downloading again a very big file, the vagrant box.
+  * Here is an implementation that would solve the issue:
+    * the path to the "gold folder", will be set by the `TF_VBOX_PROVIDER_HOME` env. var., and the path of that folder will be `${TF_VBOX_PROVIDER_HOME}/.terraform/gold/virtualbox/vagrant`
+    * each image will be downloaded into the `${TF_VBOX_PROVIDER_HOME}/.terraform/gold/virtualbox/vagrant/UNIQUE_NAME` where UNIQUE name is computed as the sha256sum of the string made of the download URL
+    * add a `image_sha256` property: the url to the sha256sum of the file, to check it is the same file, so that if at the ame url the downloadfile changes, then it's re-downloaded. See below e.g. `echo "https://app.vagrantup.com/generic/boxes/debian12/versions/4.3.12/providers/virtualbox.box" | sha256sum -t -`
+    * same than previous, for `image_sha512`, also `image_sha384`, all optional
+    * et voilà.
+
+For example:
+```bash
+$ echo "https://app.vagrantup.com/generic/boxes/debian12/versions/4.3.12/providers/virtualbox.box" | sha256sum -t -
+8d6a76482ed1231b1b02f5b51fb4a7f0da2cf2b6475d815fa7aaf0b6de0ccb58  -
+```
+
+And, if the vm resource is named `my_vm`, in the terraform code :
+
+* the deflated vagrant box files will end up in the `~/.terraform/virtualbox/gold/virtualbox/8d6a76482ed1231b1b02f5b51fb4a7f0da2cf2b6475d815fa7aaf0b6de0ccb58` folder.
+* the imported virtual box machine files will end up in the `~/.terraform/virtualbox/machine/my_vm/8d6a76482ed1231b1b02f5b51fb4a7f0da2cf2b6475d815fa7aaf0b6de0ccb58` folder.
+
+Note that because of this design point of the provider, whenever my terraform executions ended up in a stale state, I had to use the VirtualBox WebUI, and run those commands:
+
+* In powershell:
+
+```Powershell
+
+rm -r "${HOME}\\.terraform\\virtualbox\\gold\\virtualbox"
+mkdir -p "${HOME}\\.terraform\\virtualbox\\gold\\virtualbox"
+
+```
+
+* In `bash`:
+
+```bash
+
+rm -fr "${HOME}/.terraform/virtualbox/gold/virtualbox"
+mkdir -p "${HOME}/.terraform/virtualbox/gold/virtualbox"
+
+```
+
+Finally, to make it possible fo the user, to manage freely the disk usage of his machine, both of the folders path have to be configurable, using at least one environment variable.
+
+The best design would be to use one environement variable named `TF_VBOX_PROVIDER_HOME`, and:
+
+* In the `${TF_VBOX_PROVIDER_HOME}/.terraform/gold/virtualbox/vagrant` folder, all vagrant golden images will be stored.
+* In the `${TF_VBOX_PROVIDER_HOME}/.terraform/virtualbox/machine` folder, called the _machines_ folder, all virtual box machines files will be stored.
+
+### Features limitations
+
 Other aspects, I would like to customize :
 
 * The disks attached to the VM: For the moment, I know how to attached an ISO file to the VM, with the `optical_disks` device, but not how to create disks, and attache several one of them to the VM
 
-* The boot order: neither do I know how to customize the boot order. Its apparently possible to do that, see https://github.com/terra-farm/terraform-provider-virtualbox/blob/ea0eae238c87eddebea4eeae2a509907e450412b/internal/provider/resource_vm.go#L152C5-L152C15
+* The boot order: neither do I know how to customize the boot order. Its apparently possible to do that, see <https://github.com/terra-farm/terraform-provider-virtualbox/blob/ea0eae238c87eddebea4eeae2a509907e450412b/internal/provider/resource_vm.go#L152C5-L152C15>
 
-* I tried different vagrant boxes, and here are the resuls I got
-  * [x] KO, the terraform runs forever without being able to create any VM (worse its not stable, i tried twice and the VM was created only in one of the two tries): <https://app.vagrantup.com/generic/boxes/debian12/versions/4.3.12/providers/virtualbox.box>
+* I tried different vagrant boxes, and here are the results I got
+  * [x] OK, the terraform runs for more tan 27 minutes to daonload the debian bookworm vagrant box: <https://app.vagrantup.com/generic/boxes/debian12/versions/4.3.12/providers/virtualbox.box>
   * [x] OK, with the old example vagrant box for Ubuntu, it worked : <https://app.vagrantup.com/ubuntu/boxes/bionic64/versions/20180903.0.0/providers/virtualbox.box>
+<!-- 
   * [ ] TODO with the most recent release of Ubuntu bionic : <https://app.vagrantup.com/ubuntu/boxes/bionic64/versions/20230607.0.0/providers/virtualbox.box>
+ -->
+
+### SSH keys
+
+* For the moment, I don't find any way to set he SSH public key for the vagrant user, as mentioned [here in the vagrant docs](https://developer.hashicorp.com/vagrant/docs/boxes/base#vagrant-user)
 
 ## Conclusions
 
-* For the moment, I don't find any way to set he SSH public key for the vagrant user, as mentioned [here in the vagrant docs](https://developer.hashicorp.com/vagrant/docs/boxes/base#vagrant-user)
+The provider definetely requires a full re-implementaton, never the less, the most important change to bring, relies in the global architeture.
+
+The most critical change to bring is about making the terraform stable against the different version of the terraform provider.
+
+The designers of the providers, did something neat, they factorized the instructions which directly invoke the VirtualBox executables, into a separate library a Golang module named `go-virtualbox`.
+
+Instead of that, the architecture which would solved of issue, would be the following:
+* a terraform provider
+* a cloud provider, as a pure REST API (with authentication, ideally OIDC)
+* a client for the cloud provider REST API, hiding the speicifities of the REST API to the source code of the terraform provider
+* the terraform provider only uses a version of the REST API client, therefore:
+  * as long as we don't change the rest client version used by the terraform provider, the terraform provider still works (its more stable)
+  * if you upgrade the installed version of virtual box, the REST API guarantees backward compatibility : 
+    * `/api/v1/` will guarantee clients versions `1.*.*` still works for VirtualBox 5
+    * `/api/v2/` will guarantee clients versions `2.*.*` still works for VirtualBox 6
+    * `/api/v3/` will guarantee clients versions `3.*.*` still works for VirtualBox 7
+    * terraform provider version 0.*.* uses client version `1.*.*`
+    * terraform provider version 1.*.* uses client version `2.*.*`
+    * terraform provider version 2.*.* uses client version `3.*.*`
+
+So obviously here, the best pattern willbe a monorepo, with :
+* The client and the terraform provider in GOlang
+* The REST API in NestJS  (perhaps one day in Golang), there will be asap a GraphQL API, GraphQL client...
+* An Open API schema for the cloud provider: 
+  * https://github.com/deepmap/oapi-codegen // https://www.jvt.me/posts/2022/04/06/generate-go-client-openapi/
+  * https://goswagger.io/generate/client.html
+  * this one seems the best: https://github.com/OpenAPITools/openapi-generator // https://dev.to/aurelievache/learning-go-by-examples-part-11-generate-a-go-sdk-api-client-library-from-your-go-rest-api-23k4
 
 ## ANNEX - TerraformRc: How `provider_installation.dev_overrides` works
 
 I found it, it is simple, the path on the right, must be the path of a folder, and that folder must contains the executable file:
 
-Let's say you have a terraformrc config file like : 
+Let's say you have a terraformrc config file like :
 
 ```Hcl
 provider_installation {
