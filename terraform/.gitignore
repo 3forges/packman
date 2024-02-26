@@ -1,1 +1,4 @@
 *.box
+*.tfplan
+*.tfstate
+*.tfstate.*
