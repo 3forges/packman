@@ -1,0 +1,5 @@
+*.box
+*.tfplan
+*.tfstate
+*.tfstate.*
+terraform.default.vbox.host.net.adapter/.terraform.d/customised-providers/terraform-provider-virtualbox/bidule/terraform.default.vbox.host.net.adapter\.terraform.d\customised-providers\terraform-provider-virtualbox\bidule\terraform-provider-virtualbox_v0.2.2-alpha.1
