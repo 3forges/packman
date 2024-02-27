@@ -946,6 +946,7 @@ The fact that the path of those two folder, is not confgurable in any way, is ba
     * et voilà.
 
 For example:
+
 ```bash
 $ echo "https://app.vagrantup.com/generic/boxes/debian12/versions/4.3.12/providers/virtualbox.box" | sha256sum -t -
 8d6a76482ed1231b1b02f5b51fb4a7f0da2cf2b6475d815fa7aaf0b6de0ccb58  -
@@ -1046,10 +1047,9 @@ provider_installation {
 }
 ```
 
-and in your `providers.tf`:
+And in your `providers.tf`:
 
 ```Hcl
-
 terraform {
 
   required_providers {
@@ -1065,7 +1065,7 @@ provider "virtualbox" {
 }
 ```
 
-and you run:
+And you run:
 
 ```bash
 
