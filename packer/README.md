@@ -40,7 +40,10 @@ ls -alh ./vagrant_${DESIRED_VAGRANT_VERSION}_windows_amd64.msi
 mkdir -p ~/.bin/vagrant/${DESIRED_VAGRANT_VERSION}/
 
 msiexec -qn -norestart -i "vagrant_${DESIRED_VAGRANT_VERSION}_windows_amd64.msi" VAGRANTAPPDIR="${HOME}/.bin/vagrant/${DESIRED_VAGRANT_VERSION}/"
-
+# - >
+# >>> You would then have to restart
+# >>> your computer, for the vagrant installation to be complete.
+# - >
 # mkdir -p ~/.bin/vagrant/${DESIRED_VAGRANT_VERSION}/
 # unzip ./ccc -d ~/.bin/vagrant/${DESIRED_VAGRANT_VERSION}/
 
@@ -49,9 +52,29 @@ msiexec -qn -norestart -i "vagrant_${DESIRED_VAGRANT_VERSION}_windows_amd64.msi"
 ## How to run
 
 
+## ANNEX: Interesting Github issues
 
+* https://github.com/hashicorp/packer/issues/7758
+
+## ANNEX: Packer misc
+
+* How to convert a packer `json` configuration file, to a packer `hcl` configuration file:
+
+```bash
+packer hcl2_upgrade -output-file=packer.hcl packer.json
+```
 
 ## ANNEX: References
 
-* The Packer Vagrant Builder: https://developer.hashicorp.com/packer/integrations/hashicorp/vagrant/latest/components/builder/vagrant.
-* A tutorial on the packer vagrant builder: https://dev.to/mattdark/a-custom-vagrant-box-with-packer-13ke
+* The Packer Vagrant Builder: <https://developer.hashicorp.com/packer/integrations/hashicorp/vagrant/latest/components/builder/vagrant>.
+* **The Packer virtualbox builders, there are 3 of them which are al interesting. Those 3 can be a good base to design a "pipeline", for provisioning golden images. I am particularly interested in the virtualbox-iso one which I would like to use to build a debian Virtual box VM from an iso file, and a debian preseed, the pressed should contain the post install script, and in the post install script we would install the public SSH KEy into the `~/.ssh/authorized_keys`. <https://developer.hashicorp.com/packer/integrations/hashicorp/virtualbox>**
+* A tutorial on the packer vagrant builder: <https://dev.to/mattdark/a-custom-vagrant-box-with-packer-13ke>
+* Other packer tutorials:
+
+  * <https://medium.com/notes-and-tips-in-full-stack-development/how-to-automate-building-local-virtual-machines-with-packer-a238ba6b49c7>
+  * `qemu` : 
+    * https://github.com/miry/samples/tree/master/experiments/3-packer-images/
+    * Install `qemu` on windows : https://www.qemu.org/download/#windows
+  * debian preseeds:
+    * https://gist.github.com/slattery/fc7cf2efc395086544c0
+    * https://www.debian.org/releases/buster/amd64/apbs02.en.html
