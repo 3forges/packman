@@ -1,0 +1,5 @@
+export LX_USERNAME=vagrant
+mkdir -p /home/${LX_USERNAME}/.ssh/
+chmod 700 -R /home/${LX_USERNAME}/.ssh/
+cat 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDOyF6QJA0M93k52pxI1kkFzPRY9accebzajr+/lpc0FJbOw7kJ+O59Bq8fBfkzCZmzibGbZwemJviE0VPK0xQlbHD7y9lHJ16tME09FmmH2QAc8W07KjBh+4JBD14iUDVpbHMtxz428/dspeBJWEx8oM/3FduQmkhC9iXkgoegfzTYMzob/4xON7ErPSID+kIh10fssggukxbIWyXs3NM37ta53hn8i8bCQiFoIRGqMuLWqyQnTfozg4F045fRK0Q0OmKPM+tdE34CqhhwTP56QMxvYI74Vi59hBsDPGGfMraOaUjOgREvc42JOiPNVdR9+3erFWDUM+1YECtux9gvtM5SXnkLf3L1KU2/Ufg21SYXhCT0nhZZuC9prbILpva25W0RZt+/ix7wFNI8a2JKC2IllmURLZf+LdjTu4hMwzzHaZOa2ZvBfjdq3lnNWKj0r59U0OsncrBo88selntfN8BdK1dTp6MFhANRkk+0CAmUbr8nDQtmD/kIdISPF95FEV/Hzefg/nYBKCbsOA64MxdGUXVwKTAPAzcOk0OrE+ZsysSzJm2yex7CwV7EVucRYJBbz+8Jv5nuptyuZwwmlyyJhyvMKLsyHJ2nV2APu6XZzhZ3T5HQIq92D3mtnzPluIjkh1eo/nauJ6Zy6DsLE5E59/s3r9sciHgjvmvynw== ' | tee -a /home/${LX_USERNAME}/.ssh/authorized_keys
+chmod 644 -R /home/${LX_USERNAME}/.ssh/authorized_keys
