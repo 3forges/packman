@@ -340,7 +340,7 @@ EOF
 
 ```
 
-And I ran the packer build again ...To find the same error.
+And I ran the packer build again... To find the same error.
 
 I searched a bitmore, and added a template Vagrantfile, which content was exactly the same asthe base Vagrantfile, except I added a provider specific network interface config, plsu a section inspired by the above mentioned blog post, which gave me this Vagrantfile template:
 
@@ -443,14 +443,18 @@ That's where I understood something extremely important when working with `Packe
 * And as I ran again my Packerbuild,i finally found the error: `2024/03/01 22:34:39 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/01 22:34:39 [vagrant driver] stderr: The "metadata.json" file for the box './.base.box/debian12base.box' was not found.`.
 * Absolutely nothing to do with any SSH configuration!
 * soon i found a few related github issue on vagrant's github repository (I'm not alone in the world!):
-  * this one is very interesting, its quite recent, and states the exact same issue as me (as I write this, March, 1st, 2024, and the issue dats bck to July 2022). Interesting also, the issuer tarballs the box for testing, using `tar -cvf`, while I used `tar -zcvf` instead : <https://github.com/hashicorp/vagrant/issues/12829>
-  * even more interesting, there are **19** (!) closed issues about the exact same error message: <https://github.com/hashicorp/vagrant/issues?q=is%3Aissue+The+%22metadata.json%22+file+for+the+box+%27custom%27+was+not+found+is%3Aclosed>
+  * this one is very interesting, its quite recent, and states the exact same issue as me (as I write this, March, 1st, 2024, and the issue dats bck to July 2022). Most Interesting also, the issuer tarballs the box for testing, using `tar -cvf`, while I used `tar -zcvf` instead : <https://github.com/hashicorp/vagrant/issues/12829>
+  * even more interesting, there are **19** (!) closed issues which mention the `metadata.json` file: <https://github.com/hashicorp/vagrant/issues?q=is%3Aissue+The+%22metadata.json%22+file+for+the+box+%27custom%27+was+not+found+is%3Aclosed>
+
+![vagrant issue - metadata.json - 19 times](./docs/images/vagrant_issue_19_times_raised.PNG)
+
 * _**What I understood then**_: Packer works with plugins, this means that when a given plugin fails with an error, packer can only spito ut what the plugin passed him. So it is exetremely important torun packer with debug log level, to troubleshoot most of the difficulties experienced using a Packer builder.
 
 Now, what i naturally did, to test if it was menot packaging well my tarball vagrant box:
+
 * Instead of   `source_path  = "./.base.box/debian12base.box"`
 * I used `source_path  = "https://app.vagrantup.com/generic/boxes/debian12/versions/4.3.12/providers/virtualbox.box"`
-* That, because my vagrant box was indeed coming from https://app.vagrantup.com/generic/boxes/debian12/versions/4.3.12/providers/virtualbox.box , andit was the terraform provider who deflatedit, letting meplay with the following files on my local filesystem:
+* That, because my vagrant box was indeed coming from https://app.vagrantup.com/generic/boxes/debian12/versions/4.3.12/providers/virtualbox.box , and it was the terraform provider who deflatedit, letting meplay with the following files on my local filesystem:
 
 ```bash
 $ ls -alh ~/.terraform/virtualbox/gold/virtualbox/
@@ -468,7 +472,7 @@ No need to tell you that re-downloadingthe whole vagrant box isavery long test, 
 
 But I learned my lesson tonight. Next episode tomorrow.
 
-Beforegoing tosleep, as i finished writing my documentation, the Packer build based on the https URL of the debian 12 vagrant box, completed its execution, with an errorI already knowwhat it is about (I need to run the samepackerbuild in powershell, not in git bash for windows, typical itslike terraform, the golang binary searches for native widows file paths):
+Beforegoing tosleep, as i finished writing my documentation, the Packer build based on the https URL of the debian 12 vagrant box, completed its execution, with an errorI already knowwhat it is about (I need to run the samepackerbuild in powershell, not in git bash for windows, typical its like terraform, the golang binary searches for native widows file paths):
 
 ```bash
 2024/03/01 23:43:31 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/01 23:43:31 [vagrant driver] stderr: C:/Program Files/Vagrant/embedded/mingw64/lib/ruby/3.1.0/fileutils.rb:243:in `mkdir': No such file or directory @ dir_s_mkdir - C:/Users/Utilisateur/.vagrant.d/boxes/https-VAGRANTCOLON--VAGRANTSLASH--VAGRANTSLASH-app.vagrantup.com-VAGRANTSLASH-generic-VAGRANTSLASH-boxes-VAGRANTSLASH-debian12-VAGRANTSLASH-versions-VAGRANTSLASH-4.3.12-VAGRANTSLASH-providers-VAGRANTSLASH-virtualbox.box (Errno::ENOENT)
@@ -476,6 +480,101 @@ Beforegoing tosleep, as i finished writing my documentation, the Packer build ba
 ```
 
 Good night, with a little more documentation.
+
+The next day, cosy afternoon, a good sleep the night before. I look again at the error I stopped work on yesterday, and an idea shows up:
+
+* the error states that some file apparently does not exists, on my filesystem, the `C:/Users/Utilisateur/.vagrant.d/boxes/https-VAGRANTCOLON--VAGRANTSLASH--VAGRANTSLASH-app.vagrantup.com-VAGRANTSLASH-generic-VAGRANTSLASH-boxes-VAGRANTSLASH-debian12-VAGRANTSLASH-versions-VAGRANTSLASH-4.3.12-VAGRANTSLASH-providers-VAGRANTSLASH-virtualbox.box`
+* So lets check that:
+
+```bash
+
+ls -alh /C/Users/Utilisateur/.vagrant.d/
+ls -alh /C/Users/Utilisateur/.vagrant.d/boxes/
+ls -alh /C/Users/Utilisateur/.vagrant.d/boxes/https-VAGRANTCOLON--VAGRANTSLASH--VAGRANTSLASH-app.vagrantup.com-VAGRANTSLASH-generic-VAGRANTSLASH-boxes-VAGRANTSLASH-debian12-VAGRANTSLASH-versions-VAGRANTSLASH-4.3.12-VAGRANTSLASH-providers-VAGRANTSLASH-virtualbox.box
+```
+
+Result:
+
+```bash
+$ ls -alh /C/Users/Utilisateur/.vagrant.d/
+total 145K
+drwxr-xr-x 1 Utilisateur 197121    0 Mar  1 23:43 ./
+drwxr-xr-x 1 Utilisateur 197121    0 Mar  2 02:07 ../
+drwxr-xr-x 1 Utilisateur 197121    0 Mar  1 23:23 boxes/
+drwxr-xr-x 1 Utilisateur 197121    0 Mar  1 23:43 data/
+drwxr-xr-x 1 Utilisateur 197121    0 Mar  1 20:15 gems/
+-rw-r--r-- 1 Utilisateur 197121 1.7K Mar  1 20:15 insecure_private_key
+drwxr-xr-x 1 Utilisateur 197121    0 Mar  1 20:15 insecure_private_keys/
+drwxr-xr-x 1 Utilisateur 197121    0 Mar  1 20:15 rgloader/
+-rw-r--r-- 1 Utilisateur 197121    3 Mar  1 20:15 setup_version
+drwxr-xr-x 1 Utilisateur 197121    0 Mar  1 23:43 tmp/
+
+$ ls -alh /C/Users/Utilisateur/.vagrant.d/boxes/
+total 4.0K
+drwxr-xr-x 1 Utilisateur 197121 0 Mar  1 23:23 ./
+drwxr-xr-x 1 Utilisateur 197121 0 Mar  1 23:43 ../
+drwxr-xr-x 1 Utilisateur 197121 0 Mar  1 23:23 golden_debian12/
+
+$ ls -alh /C/Users/Utilisateur/.vagrant.d/boxes/https-VAGRANTCOLON--VAGRANTSLASH--VAGRANTSLASH-app.vagrantup.com-VAGRANTSLASH-generic-VAGRANTSLASH-boxes-VAGRANTSLASH-debian12-VAGRANTSLASH-versions-VAGRANTSLASH-4.3.12-VAGRANTSLASH-providers-VAGRANTSLASH-virtualbox.box
+ls: cannot access '/C/Users/Utilisateur/.vagrant.d/boxes/https-VAGRANTCOLON--VAGRANTSLASH--VAGRANTSLASH-app.vagrantup.com-VAGRANTSLASH-generic-VAGRANTSLASH-boxes-VAGRANTSLASH-debian12-VAGRANTSLASH-versions-VAGRANTSLASH-4.3.12-VAGRANTSLASH-providers-VAGRANTSLASH-virtualbox.box': No such file or directory
+
+```
+
+* Now Note that:
+  * There is a folder that does exist, the `/C/Users/Utilisateur/.vagrant.d/boxes/golden_debian12/` folder.
+  * And the error message is right, on my filesystem, there is no existing file or folder with path `/C/Users/Utilisateur/.vagrant.d/boxes/https-VAGRANTCOLON--VAGRANTSLASH--VAGRANTSLASH-app.vagrantup.com-VAGRANTSLASH-generic-VAGRANTSLASH-boxes-VAGRANTSLASH-debian12-VAGRANTSLASH-versions-VAGRANTSLASH-4.3.12-VAGRANTSLASH-providers-VAGRANTSLASH-virtualbox.box`
+  * That, in my `packer.pkr.hcl` file, I gave to the :
+    * `box_name` configuration property, the value `golden_debian12`.
+    * `source_path` configuration property, the value `https://app.vagrantup.com/generic/boxes/debian12/versions/4.3.12/providers/virtualbox.box`.
+  * That on the [packer builder page](https://developer.hashicorp.com/packer/integrations/hashicorp/vagrant/latest/components/builder/vagrant), the provided example, gives to the :
+    * `source_path` configuration property, the value `hashicorp/precise64`.
+    * That this `hashicorp/precise64` Vagrant box is available at <https://app.vagrantup.com/hashicorp/boxes/precise64>, and that the latest version of that box, for the virtualbox provider, can be downloaded with the URL [`https://app.vagrantup.com/hashicorp/boxes/precise64/versions/1.1.0/providers/virtualbox.box`](https://app.vagrantup.com/hashicorp/boxes/precise64/versions/1.1.0/providers/virtualbox.box)
+
+  * So If I follow the same pattern asthe Packer vagrant builder, if i want my packer build to use the [`https://app.vagrantup.com/generic/boxes/debian12/versions/4.3.12/providers/virtualbox.box`](https://app.vagrantup.com/generic/boxes/debian12/versions/4.3.12/providers/virtualbox.box), I should then :
+    * set the `source_path` to `generic/debian12`
+    * set the `box_name` to any name I never used before, to be able to make sure how `box_name` will be used (will i find a `${HOME}/.vagrant.d/boxes/<the new name I never used before>` ?)
+
+I applied those changes in my packer build definition `./packer.pkr.hcl`, and to begin with, bingo, setting `source_path` to `generic/debian12`, resulted in downloading the expected box, see the output:
+
+```bash
+out:     box: Downloading: https://vagrantcloud.com/generic/boxes/debian12/versions/4.3.12/providers/virtualbox/amd64/vagrant.box
+```
+
+Bingo, the result is that I have a new error, which clearly states that i have an error in my `./packer/.vagrant/debian12/Vagrantfile.tpl` Vagrantfile template, about the video ram size, look (thank you packer logs again):
+
+```bash
+err: The following error was experienced:
+2024/03/02 15:02:48 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/02 15:02:48 [vagrant driver] stderr:
+2024/03/02 15:02:48 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/02 15:02:48 [vagrant driver] stderr: #<Vagrant::Errors::VBoxManageError: There was an error while executing `VBoxManage`, a CLI used by Vagrant
+2024/03/02 15:02:48 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/02 15:02:48 [vagrant driver] stderr: for controlling VirtualBox. The command and stderr is shown below.
+2024/03/02 15:02:48 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/02 15:02:48 [vagrant driver] stderr:
+2024/03/02 15:02:48 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/02 15:02:48 [vagrant driver] stderr: Command: ["modifyvm", "7ad48baa-3040-491a-8655-7b0dd4c5e519", "--vram", "2048"]
+2024/03/02 15:02:48 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/02 15:02:48 [vagrant driver] stderr:
+2024/03/02 15:02:48 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/02 15:02:48 [vagrant driver] stderr: Stderr: VBoxManage.exe: error: Invalid VRAM size: 2048 MB (must be in range [0, 256] MB)
+
+```
+
+![firstbootup](./docs/images/finally_the_vm_gets_created_for_first_time.PNG)
+
+Alright, so I will reset the video memory to the maximum value, 256.
+
+
+And now we getto the famous problem about how toSSH into the booted VM:
+
+```bash
+out: ==> source: Waiting for machine to boot. This may take a few minutes...
+2024/03/02 15:20:13 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/02 15:20:13 [vagrant driver] stdout:     source: SSH address: 127.0.0.1:22
+2024/03/02 15:20:13 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/02 15:20:13 [vagrant driver] stdout:     source: SSH username: vagrant
+2024/03/02 15:20:13 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/02 15:20:13 [vagrant driver] stdout:     source: SSH auth method: private key
+2024/03/02 15:20:13 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/02 15:20:13 [vagrant driver] stdout:     source: Warning: Authentication failure. Retrying...
+2024/03/02 15:20:24 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/02 15:20:24 [vagrant driver] stdout:     source: Warning: Authentication failure. Retrying...
+2024/03/02 15:20:34 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/02 15:20:34 [vagrant driver] stdout:     source: Warning: Authentication failure. Retrying...
+2024/03/02 15:20:44 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/02 15:20:44 [vagrant driver] stdout:     source: Warning: Authentication failure. Retrying...
+2024/03/02 15:20:55 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/02 15:20:55 [vagrant driver] stdout:     source: Warning: Authentication failure. Retrying...
+2024/03/02 15:21:05 packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe plugin: 2024/03/02 15:21:05 [vagrant driver] stdout:     source: Warning: Authentication failure. Retrying...
+```
+
+My PAcker build forever tries unsuccessfully to SSH into the VM.
 
 ## How to run
 
@@ -500,6 +599,7 @@ chmod +x ./.shell/.utils/prepare.sh
 * Then, run the build:
 
 ```bash
+export PACKER_LOG=debug
 packer build ./packer.pkr.hcl
 ```
 

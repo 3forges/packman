@@ -8,13 +8,15 @@ packer {
 }
 
 source "vagrant" "debian12_base" {
-  add_force    = true
+  add_force    = false
   communicator = "ssh"
   provider     = "virtualbox"
   # source_path  = "./.base.box/debian12base.box"
-  source_path  = "https://app.vagrantup.com/generic/boxes/debian12/versions/4.3.12/providers/virtualbox.box"
-  box_name     = "golden_debian12"
-  output_dir   = "./golden/debian12"
+  source_path  = "generic/debian12" # will use https://app.vagrantup.com/generic/boxes/debian12/versions/4.3.12/providers/virtualbox.box
+  # box_name     = "golden_debian12" # set with # # source_path  = "./.base.box/debian12base.box"
+  box_name     = "golden_debian12_remote"
+  # output_dir   = "./golden/debian12"
+  output_dir   = "./golden/debian12_remote"
   insert_key   = true
   template     = "./.vagrant/debian12/Vagrantfile.tpl"
   # ssh_username = "packman"

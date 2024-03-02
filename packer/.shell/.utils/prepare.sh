@@ -51,7 +51,11 @@ fi;
 # ---
 # - [tar + gzip] = [tar -z]
 # tar -zcvf ./.base.box/box.tar.gz ./.base.box/content
-tar -zcvf ./.base.box/debian12base.box ./.base.box/content
+# tar -zcvf ./.base.box/debian12base.box ./.base.box/content
+# because of [https://github.com/hashicorp/vagrant/issues/12829]
+tar -cvf ./.base.box/debian12base.box --exclude='.fake' --exclude='*.*.fake' --exclude='*.fake' ./.base.box/content
+# --
+# also both very useful, and clear, the bible: https://www.gnu.org/software/tar/manual/html_node/exclude.html
 # --- ---
 # -- check the content of
 # -  the box (a gzip tarball):
