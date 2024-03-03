@@ -1228,8 +1228,19 @@ So this is about understanding bettermy shell provisioner.
 
 Ok I think I found why I have this strange behavior:
 * [perhaps its like this issue](https://github.com/hashicorp/packer/issues/4182#issuecomment-261570851)
-* Ohhhh uncommenting in the Vagrantfile template, the `# output.vm.box_url = "file://package.box"` might help there...
+* Ohhhh uncommenting in the Vagrantfile template, the `# output.vm.box_url = "file://package.box"` might help there... see also https://github.com/hashicorp/vagrant/issues/13009
 * ok i'll search that tomorrow...
+* Ok i couldn't help trying and yes it was that i had to un comment the `output.vm.box_url = "file://package.box"` line in my Vagrantfile template and its now all good :D , `jq` is indeed found in the `vagrant up`-spawnedVM, together with all installed packages thats great.
+
+
+Next step:
+
+* adding new disks to my VM (and mount them automatically)
+* customize `/etc/network/interfaces` and `/etc/network/interfaces.d/*` netork configurations
+* bring an actual, clean golden images pipeline: I need a clear schematics of a full lifecycle management case, for PXEless designed images (immutable infrrastructure). I need there to raise the conept of VM appliances, VM being instances of those appliances.
+* I want to be able to build my own Vagrant applicance for VMware instead of Virtualbox: tere exaccctlyy what i need to demoimmutable updates/upgrades : https://developer.hashicorp.com/terraform/tutorials/virtual-machine/vsphere-provider
+* I want to get rid of vagrant: to go from Vagrant boxes, to OVF appliances with virtualbox-ovf builder, 
+* I want another appliances pipeline with virutalbox-iso/virtualbox-ovf/virtualbox-ovf https://developer.hashicorp.com/packer/integrations/hashicorp/virtualbox
 
 Something else I want to have a look on later (how to package a VirtualBox VM into a Vagrant Box):
 
