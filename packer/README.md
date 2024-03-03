@@ -1228,9 +1228,10 @@ So this is about understanding bettermy shell provisioner.
 
 Ok I think I found why I have this strange behavior:
 * [perhaps its like this issue](https://github.com/hashicorp/packer/issues/4182#issuecomment-261570851)
+* Ohhhh uncommenting in the Vagrantfile template, the `# output.vm.box_url = "file://package.box"` might help there...
 * ok i'll search that tomorrow...
 
-Something elseI want to have a look on later (how to package a VirtualBox VM into a Vagrant Box):
+Something else I want to have a look on later (how to package a VirtualBox VM into a Vagrant Box):
 
 ```bash
 $ vagrant package --help
