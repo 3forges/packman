@@ -27,9 +27,11 @@ export VAGRANT_LX_USER_NAME="vagrant"
 cat <<EOF >./.shell/.build/setup.sh
 export LX_USERNAME=${VAGRANT_LX_USER_NAME}
 mkdir -p /home/\${LX_USERNAME}/.ssh/
+echo '$VAGRANT_LX_USER_SSH_PUBKEY' | tee -a /home/\${LX_USERNAME}/.ssh/authorized_keys
 chmod 700 -R /home/\${LX_USERNAME}/.ssh/
-cat '$VAGRANT_LX_USER_SSH_PUBKEY' | tee -a /home/\${LX_USERNAME}/.ssh/authorized_keys
 chmod 644 -R /home/\${LX_USERNAME}/.ssh/authorized_keys
+sudo apt-get install -y curl wget gettext jq
+
 EOF
 
 

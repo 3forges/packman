@@ -17,7 +17,7 @@ Vagrant.configure(2) do |config|
   # config.ssh.private_key_path = ""
   # config.ssh.username = "vagrant" 
   # config.ssh.password = "vagrant"
-  config.ssh.port     = 22
+  # config.ssh.port     = 22
   
   config.vm.define "source", autostart: true do |source|
     source.vm.box = "{{.SourceBox}}"
@@ -71,9 +71,15 @@ Vagrant.configure(2) do |config|
     v.customize ["modifyvm", :id, "--memory", 4096]
     v.customize ["modifyvm", :id, "--vram", 256]
     v.customize ["modifyvm", :id, "--cpus", 4]
+    # v.customize ["modifyvm", :id, "--cable-connected1", "on"]
+    # v.customize ["modifyvm", :id, "--nic1", "bridged"]
+    # v.customize ["modifyvm", :id, "--bridge-adapter1", "TP-Link Wireless USB Adapter"]
     v.customize ["modifyvm", :id, "--cable-connected1", "on"]
-    v.customize ["modifyvm", :id, "--nic1", "bridged"]
-    v.customize ["modifyvm", :id, "--bridge-adapter1", "TP-Link Wireless USB Adapter"]
+    v.customize ["modifyvm", :id, "--nic1", "nat"]
+    # v.customize ["modifyvm", :id, "--bridge-adapter1", "TP-Link Wireless USB Adapter"]
+    v.customize ["modifyvm", :id, "--cable-connected2", "on"]
+    v.customize ["modifyvm", :id, "--nic2", "bridged"]
+    v.customize ["modifyvm", :id, "--bridge-adapter2", "TP-Link Wireless USB Adapter"]
     v.gui = true
   end
 

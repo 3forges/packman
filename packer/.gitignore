@@ -13,3 +13,7 @@ packer_cache
 .base.box/content/box.ovf
 !./.base.box/content/box.ovf.fake
 !./.base.box/content/info.json
+
+# ---
+#  Don't version the packer generated Vagrant boxes
+golden/debian*
