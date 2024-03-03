@@ -1230,6 +1230,30 @@ Ok I think I found why I have this strange behavior:
 * [perhaps its like this issue](https://github.com/hashicorp/packer/issues/4182#issuecomment-261570851)
 * ok i'll search that tomorrow...
 
+Something elseI want to have a look on later (how to package a VirtualBox VM into a Vagrant Box):
+
+```bash
+$ vagrant package --help
+Usage: vagrant package [options] [name|id]
+
+Options:
+
+        --base NAME                  Name of a VM in VirtualBox to package as a base box (VirtualBox Only)
+        --output NAME                Name of the file to output
+        --include FILE,FILE..        Comma separated additional files to package with the box
+        --info FILE                  Path to a custom info.json file containing additional box information
+        --vagrantfile FILE           Vagrantfile to package with the box
+        --[no-]color                 Enable or disable color output
+        --machine-readable           Enable machine readable output
+    -v, --version                    Display Vagrant version
+        --debug                      Enable debug output
+        --timestamp                  Enable timestamps on log output
+        --debug-timestamp            Enable debug output with timestamps
+        --no-tty                     Enable non-interactive output
+    -h, --help                       Print this help
+
+```
+
 ## ANNEX: troubleshooting commands
 
 Other commands I used to analyze what is going on:
