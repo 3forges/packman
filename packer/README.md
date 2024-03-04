@@ -12,64 +12,15 @@ Our terraform recipe:
 
 The purpose of this recipe, is:
 
-* To build, using packer, a new vagrant box, relying on an already existing one in the local filesystem
+* To build, using packer, a new vagrant box, relying on an already existing one in the local filesystem.
 * The new vagrant box will give a VirutlaBox VM:
   * with an SSH Key inside
   * with Docker, and Docker compose installed
   * with either of:
-    * Either one single big disk (120GB) duynamically allocated the actual host disk space.
-    * Or with, if possible, two virtual disks, instead of just one: both dynamically allocated, one is 20GB, the second 40GB for the docker `data-root`. AFter abit of work, it seems to methat it would be much more natural to use [the `virtualbox-iso` packer builder](https://developer.hashicorp.com/packer/integrations/hashicorp/virtualbox/latest/components/builder/iso), to set up such fine disk setup. See also other [packer virtualbox integrations](https://developer.hashicorp.com/packer/integrations/hashicorp/virtualbox)
+    * Either one single big disk (120GB) dynamically allocated the actual host disk space.
+    * Or with, if possible, two virtual disks, instead of just one: both dynamically allocated, one is 20GB, the second 40GB for the docker `data-root`. _After a bit of work, it seems to me that it would be much more natural to use [the `virtualbox-iso` packer builder](https://developer.hashicorp.com/packer/integrations/hashicorp/virtualbox/latest/components/builder/iso), to set up such fine disk setup. See also other [packer virtualbox integrations](https://developer.hashicorp.com/packer/integrations/hashicorp/virtualbox)_
 
-To achieve our goal, we will use Packer's [vagrant](https://developer.hashicorp.com/packer/integrations/hashicorp/vagrant/latest/components/builder/vagrant) builder. That builder we are very interested in, because of two perfect properties for our case:
-
-* we preferable do not want to install vagrant: unforutnaltely, the vagrant packer builder does require to install vagrant.
-* we would like to just modify an eisting Vagrant Box.
-
-## (Re)-Install (upgrade) Packer
-
-### On Windows AMD64
-
-#### Git bash for windows
-
-In a git bash for windows shell session, as administrator:
-
-* To install packer, run:
-
-```bash
-choco install packer
-```
-
-* To upgrade your packer installtion, run:
-
-```bash
-choco upgrade packer
-```
-
-## Install Vagrant
-
-* Windows AMD64:
-
-```bash
-
-export DESIRED_VAGRANT_VERSION="2.4.1"
-export VAGRANT_BIN_DWNLD_LINK="https://releases.hashicorp.com/vagrant/${DESIRED_VAGRANT_VERSION}/vagrant_${DESIRED_VAGRANT_VERSION}_windows_amd64.msi"
-
-curl -LO ${VAGRANT_BIN_DWNLD_LINK}
-
-
-ls -alh ./vagrant_${DESIRED_VAGRANT_VERSION}_windows_amd64.msi
-
-mkdir -p ~/.bin/vagrant/${DESIRED_VAGRANT_VERSION}/
-
-msiexec -qn -norestart -i "vagrant_${DESIRED_VAGRANT_VERSION}_windows_amd64.msi" VAGRANTAPPDIR="${HOME}/.bin/vagrant/${DESIRED_VAGRANT_VERSION}/"
-# - >
-# >>> You would then have to restart
-# >>> your computer, for the vagrant installation to be complete.
-# - >
-# mkdir -p ~/.bin/vagrant/${DESIRED_VAGRANT_VERSION}/
-# unzip ./ccc -d ~/.bin/vagrant/${DESIRED_VAGRANT_VERSION}/
-
-```
+To achieve our goal, we will use Packer's [vagrant](https://developer.hashicorp.com/packer/integrations/hashicorp/vagrant/latest/components/builder/vagrant) builder. That builder we are very interested in, because of one perfect properties for our case: we would like to just modify an existing Vagrant Box.
 
 ## How to run
 
@@ -185,9 +136,62 @@ $ vagrant cloud publish -f --no-release -a amd64 --description "Vagrant box for 
 $ vagrant cloud publish -f -r -a amd64 --description "Vagrant box for a debian 12 vm,with docker and docker compose installed, designed for the https://github.com/decoder-leco contributors" -c "8a0559661b8822f4b67fdd24c4cff3fbd38db26719f55d1627e32bd220c1098bf7a243c70ea80faab8b6d1d3e35bdabb7ed42156652b3e175f3cbb6ef157d94c" -C "sha512" --version-description "first published version of the docker reference stack" decodeleco/debian12-docker 0.0.1-alpha virtualbox ./golden/debian12_remote/package.box
 ```
 
+hm, yet i still did create the boxbut it was private : https://app.vagrantup.com/decoderleco/boxes/debian12-docker
+
 https://github.com/hashicorp/vagrant/issues/12714
 https://github.com/hashicorp/vagrant/issues/12714
 https://github.com/hashicorp/vagrant/issues/13349
+
+
+## Setup The Stack
+
+### (Re)-Install (upgrade) Packer
+
+#### On Windows AMD64
+
+**_Git bash for windows_**
+
+In a git bash for windows shell session, as administrator:
+
+* To install packer, run:
+
+```bash
+choco install packer
+```
+
+* To upgrade your packer installtion, run:
+
+```bash
+choco upgrade packer
+```
+
+### Install Vagrant
+
+#### On Windows AMD64
+
+**_Git bash for windows_**
+
+```bash
+
+export DESIRED_VAGRANT_VERSION="2.4.1"
+export VAGRANT_BIN_DWNLD_LINK="https://releases.hashicorp.com/vagrant/${DESIRED_VAGRANT_VERSION}/vagrant_${DESIRED_VAGRANT_VERSION}_windows_amd64.msi"
+
+curl -LO ${VAGRANT_BIN_DWNLD_LINK}
+
+
+ls -alh ./vagrant_${DESIRED_VAGRANT_VERSION}_windows_amd64.msi
+
+mkdir -p ~/.bin/vagrant/${DESIRED_VAGRANT_VERSION}/
+
+msiexec -qn -norestart -i "vagrant_${DESIRED_VAGRANT_VERSION}_windows_amd64.msi" VAGRANTAPPDIR="${HOME}/.bin/vagrant/${DESIRED_VAGRANT_VERSION}/"
+# - >
+# >>> You would then have to restart
+# >>> your computer, for the vagrant installation to be complete.
+# - >
+# mkdir -p ~/.bin/vagrant/${DESIRED_VAGRANT_VERSION}/
+# unzip ./ccc -d ~/.bin/vagrant/${DESIRED_VAGRANT_VERSION}/
+
+```
 
 ## The journal of analysis
 

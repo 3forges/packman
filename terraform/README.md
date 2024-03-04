@@ -1,8 +1,96 @@
 # The Terraform part
 
+## How to run
+
+Git clone this repo, and follow the next instructions:
+
+* You will first locally install the terraform provider (git cloning it, and build itfrom source)
+* and then run the terraform, which will use the provider you just built from source.
+
+### Locally Install the provider
+
+```bash
+# ~/.terraform.d/plugins/terraform.local/local/zabbix/1.0.0/linux_amd64/terraform-provider-zabbix_v1.0.0
+
+export TF_PROVIDER_DESIRED_VERSION="0.2.2-alpha.1"
+
+mkdir -p ./.terraform.d/customised-providers/terraform-provider-virtualbox/${TF_PROVIDER_DESIRED_VERSION}/
+
+git clone git@github.com:terra-farm/terraform-provider-virtualbox.git ./.terraform.d/customised-providers/terraform-provider-virtualbox/${TF_PROVIDER_DESIRED_VERSION}/
+
+cd ./.terraform.d/customised-providers/terraform-provider-virtualbox/${TF_PROVIDER_DESIRED_VERSION}/
+
+git checkout "v${TF_PROVIDER_DESIRED_VERSION}"
+rm -fr ./.git/
+
+go build -o terraform-provider-virtualbox_v${TF_PROVIDER_DESIRED_VERSION}
+
+mkdir -p ../bidule/
+
+cp terraform-provider-virtualbox_v${TF_PROVIDER_DESIRED_VERSION} ../bidule/
+rm terraform-provider-virtualbox_v${TF_PROVIDER_DESIRED_VERSION}
+
+
+cd ../../../../
+```
+
+### Run the teraform: Git bash for windows
+
+* Execute:
+
+```bash
+
+export TF_CLI_CONFIG_FILE=$(pwd)/.dev.tfrc
+
+export TF_LOG=debug
+
+terraform validate
+terraform fmt
+
+terraform plan -out=my.first.plan.tfplan
+terraform apply -auto-approve "my.first.plan.tfplan"
+
+
+```
+
+### Run the teraform: Powershell
+
+* Execute:
+
+```Powershell
+# ---
+#  Note that on my machine, the [VBoxManage.exe] executable
+#  file is located in 
+#  the "C:\jibl_vbox\install" folder, where 
+#  I installed VirtualBox. 
+$Env:Path += ';C:\jibl_vbox\install'
+
+$Env:TF_CLI_CONFIG_FILE = "./.dev.tfrc"
+$Env:TF_LOG = "debug"
+
+terraform validate
+terraform fmt
+
+terraform plan -out="my.first.powershell.plan.tfplan"
+terraform apply -auto-approve "my.first.powershell.plan.tfplan"
+
+
+```
+
+## A few words About
+
 The work in this folder:
 
-* proves that the [terra-faram/virtualbox](https://github.com/terra-farm/terraform-provider-virtualbox) terraform provider can work, but only with very limited features. It cannot be used for example, to provision a VM from a PXEless prepared virtual disk.
+* proves that the [terra-faram/virtualbox](https://github.com/terra-farm/terraform-provider-virtualbox) terraform provider can work, but with some limitations. YEt those limitations are understandable, since VirtualBox definitely is a non-prodution ready virtualization technology, It isVirtualBOx itself which makes it difficult, to go from dev to production: the changes will be huge, from this dev terraform, to the production terraform you will come up with. Yet here a few limitations of the provider:
+  * it cannot be used to set many iimportant system settings, like the virtualization type (like KVM, Hyper-V, or the default one). Neither can it change the chipset. Yet those changes could be set at the appliance level (OVF/OVA).
+  * it cannot be used to provision a VM with several NICs.
+  * it cannot be used to provision virtualbox networks, without a VM.
+  * it cannot be used to set the interface type, like virtio for example.
+  * it cannot be used to setup port forwarding for NAT networking
+  * it cannot be used to force keeping/resetting MAC address
+  * to provision a VM from anything else than a vagrant box appliance:
+    * to confirm, but it does not support OVA
+    * this means that you would have to play and convert between vagrant box and ova, ovf, and other appliances standards, to integrate this terraform provider into your own infrastructure factory/stack. It binds you to vagrant, while more appliances support would make the provider much more interesting.
 
 * It also is a base to analyze the design of that provider, and find improvements, for a complete new implementation of a terraform provider making it possible to fully manage virtualbox-based virtual machines.
 
@@ -52,78 +140,6 @@ go version go1.18.3 windows/amd64
 PS C:\Users\Utilisateur> VBoxManage --version
 7.0.6r155176
 PS C:\Users\Utilisateur>
-```
-
-## How to run
-
-### Git bash for windows
-
-* Locally Install the provider : 
-
-```bash
-# ~/.terraform.d/plugins/terraform.local/local/zabbix/1.0.0/linux_amd64/terraform-provider-zabbix_v1.0.0
-
-export TF_PROVIDER_DESIRED_VERSION="0.2.2-alpha.1"
-
-mkdir -p ./.terraform.d/customised-providers/terraform-provider-virtualbox/${TF_PROVIDER_DESIRED_VERSION}/
-
-git clone git@github.com:terra-farm/terraform-provider-virtualbox.git ./.terraform.d/customised-providers/terraform-provider-virtualbox/${TF_PROVIDER_DESIRED_VERSION}/
-
-cd ./.terraform.d/customised-providers/terraform-provider-virtualbox/${TF_PROVIDER_DESIRED_VERSION}/
-
-git checkout "v${TF_PROVIDER_DESIRED_VERSION}"
-rm -fr ./.git/
-
-go build -o terraform-provider-virtualbox_v${TF_PROVIDER_DESIRED_VERSION}
-
-mkdir -p ../bidule/
-
-cp terraform-provider-virtualbox_v${TF_PROVIDER_DESIRED_VERSION} ../bidule/
-rm terraform-provider-virtualbox_v${TF_PROVIDER_DESIRED_VERSION}
-
-
-cd ../../../../
-
-
-```
-
-* Run:
-
-```bash
-
-export TF_CLI_CONFIG_FILE=$(pwd)/.dev.tfrc
-
-export TF_LOG=debug
-
-terraform validate
-terraform fmt
-
-terraform plan -out=my.first.plan.tfplan
-terraform apply -auto-approve "my.first.plan.tfplan"
-
-
-```
-
-### Powershell
-
-```Powershell
-# ---
-#  Note that on my machine, the [VBoxManage.exe] executable
-#  file is located in 
-#  the "C:\jibl_vbox\install" folder, where 
-#  I installed VirtualBox. 
-$Env:Path += ';C:\jibl_vbox\install'
-
-$Env:TF_CLI_CONFIG_FILE = "./.dev.tfrc"
-$Env:TF_LOG = "debug"
-
-terraform validate
-terraform fmt
-
-terraform plan -out="my.first.powershell.plan.tfplan"
-terraform apply -auto-approve "my.first.powershell.plan.tfplan"
-
-
 ```
 
 ## Results
