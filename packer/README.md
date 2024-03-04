@@ -1,17 +1,24 @@
 # The Packer part
 
-In the analysis of the terraform provider to provision our debian VM, we ended up with a fully functional debian VM, nevertheless lacking an SSH KEy inside.
+In the analysis of the terraform provider to provision our debian VM, we ended up with a fully functional debian VM, nevertheless lacking an SSH Key inside.
 
 Our terraform recipe:
-* downloads a vagrant box, from the vagrant boxes registry, in the `ccc` folder.
-* 
+
+* Downloads a vagrant box, from the vagrant boxes registry, in the `~/.terraform/virtualbox/gold/virtualbox` folder.
+* copies all files from the `~/.terraform/virtualbox/gold/virtualbox` folder, into a subfolder of the `~/.terraform/virtualbox/machine/` folder.
+* Imports the OVF appliance foundin the  the `~/.terraform/virtualbox/machine/` folder, to create a VirtualBox VM.
+* then applies the changes using `VBoxManage`
+* and finally boots up the VM.
 
 The purpose of this recipe, is:
-* to build, using packer, a new vagrant box, relying on an already existing one in the local filesystem
-* the new vagrant box will give a VirutlaBox VM : 
+
+* To build, using packer, a new vagrant box, relying on an already existing one in the local filesystem
+* The new vagrant box will give a VirutlaBox VM:
   * with an SSH Key inside
   * with Docker, and Docker compose installed
-  * with,if possible, two virtual disks, instead of just one: both dynamically allocated, one is 20GB, the second 40GB for the docker `data-root`
+  * with either of:
+    * Either one single big disk (120GB) duynamically allocated the actual host disk space.
+    * Or with, if possible, two virtual disks, instead of just one: both dynamically allocated, one is 20GB, the second 40GB for the docker `data-root`. AFter abit of work, it seems to methat it would be much more natural to use [the `virtualbox-iso` packer builder](https://developer.hashicorp.com/packer/integrations/hashicorp/virtualbox/latest/components/builder/iso), to set up such fine disk setup. See also other [packer virtualbox integrations](https://developer.hashicorp.com/packer/integrations/hashicorp/virtualbox)
 
 To achieve our goal, we will use Packer's [vagrant](https://developer.hashicorp.com/packer/integrations/hashicorp/vagrant/latest/components/builder/vagrant) builder. That builder we are very interested in, because of two perfect properties for our case:
 
@@ -64,7 +71,128 @@ msiexec -qn -norestart -i "vagrant_${DESIRED_VAGRANT_VERSION}_windows_amd64.msi"
 
 ```
 
-## How it was started
+## How to run
+
+* First,run the init, to resolve the `packer` build dependencies (and prepare the SSH key to install into the VM):
+
+```bash
+packer init ./packer.pkr.hcl
+# ---
+# - output:
+# ---
+# $ packer init ./packer.pkr.hcl
+# Installed plugin github.com/hashicorp/vagrant v1.1.2 in "C:/Users/Utilisateur/AppData/Roaming/packer.d/plugins/github.com/hashicorp/vagrant/packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe"
+
+# ---
+# -
+# ---
+
+chmod +x ./.shell/.utils/*.sh
+./.shell/.utils/prepare.sh
+```
+
+* Then, run the build:
+
+```bash
+export PACKER_LOG=debug
+packer build ./packer.pkr.hcl
+```
+
+* Spin up the resulting VM:
+
+```bash
+cd ./golden/debian12_remote
+vagrant up --provider virtualbox
+
+# --- To stop the VM:
+# vagrant halt
+
+# --- To destroy the VM:
+# vagrant destroy -f
+
+```
+
+* Clean everything up, except the huge base vagrant box  downloaded from `app.vagrantup.com`:
+
+```bash
+# ---
+#  Beware: 'golden_debian12_remote' is 
+#  exactly the value of the 
+#  'box_name', in the 
+#  'packer.pkr.hcl' file
+ls -alh ~/.vagrant.d/boxes/golden_debian12_remote || true
+
+vagrant box remove golden_debian12_remote
+
+ls -alh ~/.vagrant.d/boxes/golden_debian12_remote || true
+
+# ---
+#  Beware: './golden/debian12_remote' is 
+#  exactly the value of the 
+#  'output_dir', in the 
+#  'packer.pkr.hcl' file
+rm -fr ./golden/debian12_remote
+```
+
+* vagrant login:
+
+```bash
+
+$ vagrant login --token ${MY_SECRET_TOKEN}
+WARNING: This command has been deprecated and aliased to `vagrant cloud auth login`
+Translation missing: en.cloud_command.token_saved
+Translation missing: en.cloud_command.check_logged_in
+
+Utilisateur@Utilisateur-PC MINGW64 ~/packman/packer (feature/set/ssh/key)
+$ vagrant cloud auth --help
+Usage: vagrant cloud auth <subcommand> [<args>]
+
+Authorization with Vagrant Cloud
+
+Available subcommands:
+     login
+     logout
+     whoami
+
+For help on any individual subcommand run `vagrant cloud auth <subcommand> -h`
+        --[no-]color                 Enable or disable color output
+        --machine-readable           Enable machine readable output
+    -v, --version                    Display Vagrant version
+        --debug                      Enable debug output
+        --timestamp                  Enable timestamps on log output
+        --debug-timestamp            Enable debug output with timestamps
+        --no-tty                     Enable non-interactive output
+
+Utilisateur@Utilisateur-PC MINGW64 ~/packman/packer (feature/set/ssh/key)
+$ vagrant cloud auth whoami
+Currently logged in as Jean-Baptiste-Lasselle
+
+
+```
+
+* publish the newly created vagrant box:
+
+```bash
+# https://github.com/magma/magma/blob/f7b296b754b70b3b8949f442b0aae3c10de9a63a/orc8r/tools/packer/vagrant-box-upload.sh#L31
+$ #vagrant cloud auth login --token "$VAGRANT_CLOUD_TOKEN"
+$ vagrant cloud auth whoami
+$ vagrant cloud box create --description "Vagrant box for a debian 12 vm,with docker and docker compose installed, designed for the https://github.com/decoder-leco contributors" -s "debian 12 + docker + docker-compose" decoderleco/debian12-docker
+$ vagrant cloud box update --description "Vagrant box for a debian 12 vm, with docker and docker compose installed, designed for the https://github.com/decoder-leco contributors" -s "debian 12 + docker + docker-compose" decoderleco/debian12-docker
+$ vagrant cloud publish -f -a amd64 --description "Vagrant box for a debian 12 vm,with docker and docker compose installed, designed for the https://github.com/decoder-leco contributors" --version-description "first published version of the docker reference stack" decodeleco/debian12-docker 0.0.1-alpha virtualbox ./golden/debian12_remote/package.box
+```
+
+## The journal of analysis
+
+Here you can read all the analysis work I did, day by day, to achieve the result I get in this repository.
+
+I wrote it like a classic diary of a traveler.
+
+And I started from:
+
+* [The official packer vagrant builder page](https://developer.hashicorp.com/packer/integrations/hashicorp/vagrant/latest/components/builder/vagrant)
+* And the `packer.pkr.json` file you will find in the same folder than this `README.md`.
+
+_Have a nice journey._
 
 First, I upgraded my `packer` installation, and I got to version:
 
@@ -641,13 +769,13 @@ So now I will try this:
 Never the less, I don't expect the packer builder to successfully SSH into the VM: unless the vmdk disk does contain the ssh public key matching the ssh private key used by agrant, to ssh into the VM.
 
 And indeed, the packer build failedagain to SSH into the VM:
+
 * The packer builder does use the NAT network interface
 * The VM does have a NAT interface,and the port forwarding isasexpected by the packer vagrant builder plugin: 22 inside the VM, 2222 outside (see screeshot below).
 
-
 Now, I had a very good idea of a test: trying to manually SSH into the VM. That way I could verify:
 
-* That If i try to SSH into the VM using the well-known vagrant user (`vagrant` as username / `vagrant` as password), through the NAT interface, it works! From there, into my machine:
+* That If I try to SSH into the VM using the well-known vagrant user (`vagrant` as username / `vagrant` as password), through the NAT interface, it works! From there, into my machine:
   * I ran `sudo systemctl status sshd`: there I could check that the SSH server listens on all network interfaces (`0.0.0.0`), on port `22`.
   * I checked the content of several SSH configuratioon files: `/home/vagrant/.ssh/authorized_keys`, `/etc/ssh/sshd_config`, `/etc/ssh/sshd_config`: There is indeed one SSH public key inside the `/home/vagrant/.ssh/authorized_keys` (so where do I get the SSH private key?), the usePAM option is active for the openssh-server
 * But if I try the same, on the bridged network interface, it fails! As you can see in the below screenshot, well the reason was that the network interface did not get a DHCP IP address from my `TP Link Wireless Adapter` (I'll investigate later why, perhaps related to the mac address...)
@@ -1266,6 +1394,12 @@ Options:
 
 ```
 
+I note today, one last thing:
+
+In my `./packer/.vagrant/debian12/Vagrantfile.tpl` Vagrantfile template, I had an `autostart` option set to `true`, so that when I `vagrant up --provider virtualbox` my Virtual Machine, I had the surprise to see not one, but twovirtual machines: According the Vagrant terminology, the _"source"_, and the _"output"_.
+
+I set that `autostart` option to `false`, and then only my expected Virtualbox VM was 
+
 ## ANNEX: troubleshooting commands
 
 Other commands I used to analyze what is going on:
@@ -1285,35 +1419,6 @@ $ netstat -anob | grep 2222
 ```
 
 * In the VM, I used `sudo systemctl status sshd`, to check for logs to say if there was a successful established connection,
-
-
-
-## How to run
-
-* First,run the init, to resolve the `packer` build dependencies (and prepare the SSH key to install into the VM):
-
-```bash
-packer init ./packer.pkr.hcl
-# ---
-# - output:
-# ---
-# $ packer init ./packer.pkr.hcl
-# Installed plugin github.com/hashicorp/vagrant v1.1.2 in "C:/Users/Utilisateur/AppData/Roaming/packer.d/plugins/github.com/hashicorp/vagrant/packer-plugin-vagrant_v1.1.2_x5.0_windows_amd64.exe"
-
-# ---
-# -
-# ---
-
-chmod +x ./.shell/.utils/prepare.sh
-./.shell/.utils/prepare.sh
-```
-
-* Then, run the build:
-
-```bash
-export PACKER_LOG=debug
-packer build ./packer.pkr.hcl
-```
 
 ## ANNEX: Interesting Github issues
 

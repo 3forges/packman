@@ -25,6 +25,8 @@ export VAGRANT_LX_USER_SSH_PUBKEY=$(cat ./.ssh.packman/id_rsa.pub)
 export VAGRANT_LX_USER_NAME="vagrant"
 
 cat <<EOF >./.shell/.build/setup.sh
+#!/bin/bash
+
 export LX_USERNAME=${VAGRANT_LX_USER_NAME}
 mkdir -p /home/\${LX_USERNAME}/.ssh/
 echo '$VAGRANT_LX_USER_SSH_PUBKEY' | tee -a /home/\${LX_USERNAME}/.ssh/authorized_keys
@@ -34,10 +36,50 @@ sudo apt-get install -y curl wget gettext jq
 
 EOF
 
+export ALL_PACKMAN_LX_USERS_SSH_PUBKEY=$(cat ./.ssh.packman/id_rsa.pub)
+if [ -f ./.shell/.build/create.lx.users.sh ]; then
+  rm -f ./.shell/.build/create.lx.users.sh
+fi;
+cat ./.shell/.utils/create.lx.users.template.sh | tee ./.shell/.build/create.lx.users.sh
+sed -i "s#ALL_PACKMAN_LX_USERS_SSH_PUBKEY_PLACEHOLDER#${ALL_PACKMAN_LX_USERS_SSH_PUBKEY}#g" ./.shell/.build/create.lx.users.sh
+
+cp ./.shell/.utils/install-containerstack.sh ./.shell/.build/
+cp ./.shell/.utils/install-docker.compose.sh ./.shell/.build/
+
+chmod +x ./.shell/.build/*.sh
+
+cat <<EOF >./addon.to.ssh.config
+######################################################
+# Vagrant
+######################################################
+
+Host 192.168.*.*
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+
+Host 127.0.0.1
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+
+Host localhost
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+
+Host local.*.*
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+
+Host *.loc
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+EOF
+
+cat ./addon.to.ssh.config | tee -a ~/.ssh/config
+
+rm ./addon.to.ssh.config
 
 
-
-
+exit 0
 # ---
 # A VagrantBox is just a gzip tarball, as of
 # the golang source code file 'image.go' of

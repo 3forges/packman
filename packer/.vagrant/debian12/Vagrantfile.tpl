@@ -19,7 +19,7 @@ Vagrant.configure(2) do |config|
   # config.ssh.password = "vagrant"
   # config.ssh.port     = 22
   
-  config.vm.define "source", autostart: true do |source|
+  config.vm.define "source", autostart: false do |source|
     source.vm.box = "{{.SourceBox}}"
     config.ssh.insert_key = {{.InsertKey}}
   end
@@ -27,6 +27,7 @@ Vagrant.configure(2) do |config|
   config.vm.define "output" do |output|
     output.vm.box = "{{.BoxName}}"
     output.vm.box_url = "file://package.box"
+    # output.vm.box_url = "file://{{.BoxName}}.box"
     config.ssh.insert_key = {{.InsertKey}}
   end
   
