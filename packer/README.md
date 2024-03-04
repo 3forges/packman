@@ -179,7 +179,15 @@ $ vagrant cloud auth whoami
 $ vagrant cloud box create --description "Vagrant box for a debian 12 vm,with docker and docker compose installed, designed for the https://github.com/decoder-leco contributors" -s "debian 12 + docker + docker-compose" decoderleco/debian12-docker
 $ vagrant cloud box update --description "Vagrant box for a debian 12 vm, with docker and docker compose installed, designed for the https://github.com/decoder-leco contributors" -s "debian 12 + docker + docker-compose" decoderleco/debian12-docker
 $ vagrant cloud publish -f -a amd64 --description "Vagrant box for a debian 12 vm,with docker and docker compose installed, designed for the https://github.com/decoder-leco contributors" --version-description "first published version of the docker reference stack" decodeleco/debian12-docker 0.0.1-alpha virtualbox ./golden/debian12_remote/package.box
+
+$ vagrant cloud publish -f --no-release -a amd64 --description "Vagrant box for a debian 12 vm,with docker and docker compose installed, designed for the https://github.com/decoder-leco contributors" -c "8a0559661b8822f4b67fdd24c4cff3fbd38db26719f55d1627e32bd220c1098bf7a243c70ea80faab8b6d1d3e35bdabb7ed42156652b3e175f3cbb6ef157d94c" -C "sha512" --version-description "first published version of the docker reference stack" decodeleco/debian12-docker 0.0.1-alpha virtualbox ./golden/debian12_remote/package.box
+
+$ vagrant cloud publish -f -r -a amd64 --description "Vagrant box for a debian 12 vm,with docker and docker compose installed, designed for the https://github.com/decoder-leco contributors" -c "8a0559661b8822f4b67fdd24c4cff3fbd38db26719f55d1627e32bd220c1098bf7a243c70ea80faab8b6d1d3e35bdabb7ed42156652b3e175f3cbb6ef157d94c" -C "sha512" --version-description "first published version of the docker reference stack" decodeleco/debian12-docker 0.0.1-alpha virtualbox ./golden/debian12_remote/package.box
 ```
+
+https://github.com/hashicorp/vagrant/issues/12714
+https://github.com/hashicorp/vagrant/issues/12714
+https://github.com/hashicorp/vagrant/issues/13349
 
 ## The journal of analysis
 
