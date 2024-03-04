@@ -59,14 +59,17 @@ for THAT_USER in ${LX_USERS_TO_CREATE}; do
   echo ">>> # >>> # >>> # >>> # >>> # >>> # >>> # "
   echo ">>> # >>> # >>> # >>> # >>> # >>> # >>> # "
   # create the user
-  sudo useradd -g $NEW_LX_USERS_GRP_NAME -u $THAT_USER_UID -m $THAT_USER
+  sudo useradd -g $NEW_LX_USERS_GRP_NAME -u $THAT_USER_UID -m $THAT_USER -s /bin/bash
   # add the user to the sudo group
   sudo usermod -aG sudo $THAT_USER || true
   # to the SSH setup
   sudo mkdir -p /home/${THAT_USER}/.ssh/
-  echo 'ALL_PACKMAN_LX_USERS_SSH_PUBKEY_PLACEHOLDER' | sudo tee -a /home/${LX_USERNAME}/.ssh/authorized_keys
-  chmod 700 -R /home/${THAT_USER}/.ssh/
-  chmod 644 -R /home/${THAT_USER}/.ssh/authorized_keys
+  echo 'ALL_PACKMAN_LX_USERS_SSH_PUBKEY_PLACEHOLDER' | sudo tee -a /home/${THAT_USER}/.ssh/authorized_keys
+  sudo chmod 700 -R /home/${THAT_USER}/.ssh/
+  sudo chmod 644 /home/${THAT_USER}/.ssh/authorized_keys
+  sudo chown ${THAT_USER}:$NEW_LX_USERS_GRP_NAME -R /home/${THAT_USER}/.ssh/
+  sudo chmod 700 -R /home/${THAT_USER}/.ssh/
+  sudo chmod 644 /home/${THAT_USER}/.ssh/authorized_keys
 done
 
 # --- # --- # --- 
