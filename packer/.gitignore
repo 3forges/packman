@@ -1,0 +1,19 @@
+packer_cache
+
+# ---
+# Just to give you a hint of 
+# what my box content layout looks like
+!.base.box/content/
+.base.box/debian12base.box
+!.base.box/debian12base.box.fake
+!.base.box/content/Vagrantfile
+!.base.box/content/metadata.json
+.base.box/content/generic-debian12-virtualbox-x64-disk001.vmdk
+!./.base.box/content/generic-debian12-virtualbox-x64-disk001.vmdk.fake
+.base.box/content/box.ovf
+!./.base.box/content/box.ovf.fake
+!./.base.box/content/info.json
+
+# ---
+#  Don't version the packer generated Vagrant boxes
+golden/debian*

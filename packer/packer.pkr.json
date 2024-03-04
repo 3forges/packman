@@ -1,0 +1,18 @@
+{
+    "provisioners": [
+      {
+        "type": "shell",
+        "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+        "script": ".shell/.build/setup.sh"
+      }
+    ],
+    "builders": [
+      {
+        "communicator": "ssh",
+        "source_path": "./.base.box/debian12base.box",
+        "provider": "virtualbox",
+        "add_force": true,
+        "type": "vagrant"
+      }
+    ]
+  }
