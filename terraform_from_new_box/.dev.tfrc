@@ -1,0 +1,5 @@
+provider_installation {
+    dev_overrides {
+      "terra-farm/virtualbox" = "../terraform/.terraform.d/customised-providers/terraform-provider-virtualbox/bidule"
+    }
+}
