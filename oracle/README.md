@@ -6,7 +6,7 @@
 
 * In a powershell session, Execute:
 
-```Powershell
+```PowerShell
 # ---
 #  
 $Env:TF_LOG = "debug"
@@ -19,6 +19,15 @@ terraform fmt
 terraform plan -out="my.first.powershell.plan.tfplan"
 terraform apply -auto-approve "my.first.powershell.plan.tfplan"
 
+
+```
+
+* Destroy it all:
+
+```PowerShell
+
+terraform plan -destroy -out="my.first.destroy.powershell.plan.tfplan"
+terraform apply "my.first.destroy.powershell.plan.tfplan"
 
 ```
 
