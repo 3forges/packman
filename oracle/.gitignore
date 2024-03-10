@@ -1,0 +1,7 @@
+*.box
+*.tfplan
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+.terraform
+.terraform.lock.hcl
