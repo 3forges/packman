@@ -76,3 +76,9 @@ oci_core_instance.ubuntu_instance: Creating...
 ╵
 PS C:\Users\Utilisateur\packman\oracle>
 ```
+
+* https://docs.oracle.com/en-us/iaas/Content/Rover/Compute/Image/get_image-shape-compatibility-entry.htm
+
+* https://docs.oracle.com/en-us/iaas/Content/Compute/References/images.htm
+
+* https://docs.oracle.com/en-us/iaas/tools/oci-cli/3.37.12/oci_cli_docs/cmdref/compute/image-shape-compatibility-entry/list.html
