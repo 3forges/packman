@@ -18,3 +18,7 @@ output "ubuntu_vm_summary" {
   description = "Private and Public IPs of the Compute instance."
   value       = local.ubuntu_vm_details
 }
+# output "ssh_into_your_vm" {
+#   description = "How to ssh into your VM."
+#   value       = local.ubuntu_vm_ssh_details
+# }

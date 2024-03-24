@@ -69,7 +69,7 @@ resource "oci_core_instance" "ubuntu_vm" {
     subnet_id        = oci_core_subnet.subnetA_pub.id
   }
   metadata = {
-    ssh_authorized_keys = file("~/.decoderleco/compte.oci.a.bobo/id_rsa.pub")
+    ssh_authorized_keys = file(var.vm_ssh_auth_desired_keypair.public_key_file)
   }
   preserve_boot_volume = false
 }
@@ -119,14 +119,16 @@ resource "oci_core_default_route_table" "the_route_table" {
 # Ingress Rules for HTTP-based apps
 ########################################
 
-resource "oci_core_security_list" "test_security_list" {
+
+
+resource "oci_core_security_list" "root_compartment_security_list" {
   #Required
-  compartment_id = oci_identity_compartment.first-compartment.id
+  compartment_id = var.tenancy_ocid
   vcn_id         = oci_core_vcn.decoderleco1_vcn_racine.id
 
   #Optional
   // defined_tags = {"Operations.CostCenter"= "42"}
-  display_name = "Décoder l'éco Security Rules"
+  display_name = "Décoder l'éco Security Rules for root compartment"
 
   freeform_tags = { "Department" = "Décoder L'éco" }
   // inspired by https://github.com/oracle/terraform-provider-oci/blob/e95fac9bee135b539b6db97395984677373231ff/infrastructure/resource_discovery/transient/core.tf#L441C1-L470C4
@@ -141,10 +143,10 @@ resource "oci_core_security_list" "test_security_list" {
       min = 9001
       max = 9001
 
-      source_port_range {
-        min = 100
-        max = 100
-      }
+      # source_port_range {
+      #   min = 100
+      #   max = 65534
+      # }
     }
   }
   // allow inbound jupyterlab webui traffic
@@ -158,10 +160,69 @@ resource "oci_core_security_list" "test_security_list" {
       min = 8888
       max = 8888
 
-      source_port_range {
-        min = 100
-        max = 100
-      }
+      # source_port_range {
+      #   min = 100
+      #   max = 65534
+      # }
+    }
+  }
+  //  // allow inbound icmp traffic of a specific type
+  //  ingress_security_rules {
+  //    description = "allow inbound icmp traffic"
+  //    protocol    = 1
+  //    source      = "0.0.0.0/0"
+  //    stateless   = true
+  //
+  //    icmp_options {
+  //      type = 3
+  //      code = 4
+  //    }
+  //  }
+}
+
+resource "oci_core_security_list" "first_compartment_security_list" {
+  #Required
+  compartment_id = oci_identity_compartment.first-compartment.id
+  vcn_id         = oci_core_vcn.decoderleco1_vcn_racine.id
+
+  #Optional
+  // defined_tags = {"Operations.CostCenter"= "42"}
+  display_name = "Décoder l'éco Security Rules for First compartment, inside the root compartment."
+
+  freeform_tags = { "Department" = "Décoder L'éco" }
+  // inspired by https://github.com/oracle/terraform-provider-oci/blob/e95fac9bee135b539b6db97395984677373231ff/infrastructure/resource_discovery/transient/core.tf#L441C1-L470C4
+  // allow inbound minio webui traffic
+  ingress_security_rules {
+    description = "allow inbound minio webui traffic"
+    protocol    = "6" // "6" is for tcp, I could simply try "all", https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_security_list#protocol
+    source      = "0.0.0.0/0"
+    stateless   = false
+
+    tcp_options {
+      min = 9001
+      max = 9001
+
+      # source_port_range {
+      #   min = 100
+      #   max = 65534
+      # }
+    }
+  }
+  // allow inbound jupyterlab webui traffic
+  ingress_security_rules {
+    description = "allow inbound jupyterlab webui traffic"
+    protocol    = "6" // "6" is for tcp, I could simply try "all", https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_security_list#protocol
+    source      = "0.0.0.0/0"
+    stateless   = false
+
+    tcp_options {
+      min = 8888
+      max = 8888
+
+      # source_port_range {
+      #   min = 100
+      #   max = 65534
+      # }
     }
   }
   //  // allow inbound icmp traffic of a specific type

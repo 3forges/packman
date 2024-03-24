@@ -36,6 +36,15 @@ variable "vcn_racine" {
   }
 }
 
+variable "vm_ssh_auth_desired_keypair" {
+  description = "The path to the private and public keys your generated for ssh into your VM."
+  default = {
+    public_key_file : "~/.decoderleco/compte.oci.a.bobo/id_rsa.pub"
+    private_key_file : "~/.decoderleco/compte.oci.a.bobo/id_rsa"
+  }
+}
+
+
 variable "subnetA_pub" {
   description = "The subnet exposing publicly the VM on internet."
   default = {
