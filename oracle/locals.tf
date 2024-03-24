@@ -19,7 +19,7 @@ locals {
     \n
     Primary-PrivateIP: ${i.private_ip~}
     \n
-    SSH into the VM:   ssh -Ti ${var.vm_ssh_auth_desired_keypair.private_key_file} ${var.vm_ssh_auth_desired_keypair.username}@${i.public_ip~}
+    SSH into the VM:   ssh -i ${var.vm_ssh_auth_desired_keypair.private_key_file} ${var.vm_ssh_auth_desired_keypair.username}@${i.public_ip~}
     \n
     Go to the Minio Admin UI : http://${i.public_ip~}:9001
     EOT

@@ -39,82 +39,49 @@ I prepare this section, because according my readigs, it seems it might turn out
 
 If I setup IP tables for my VM, then I have to do it before installing docker, because docker does its own networking setup.
 
-And if so, up until now I figured out that the setup should be something like this, in the VM (but i need to work on that part to understand clearly what i am doing):
+And if so, up until now I figured out that the setup should be something like this, in the VM (but it still does not solve my issue accessing minio webapp via the VM Public IP Address, on port `9001`) : cf. [`./post_install/setup_iptables.sh`](./post_install/setup_iptables.sh)
+
+* After applying the [`./post_install/setup_iptables.sh`](./post_install/setup_iptables.sh) script, I get this in the terraform output for `sudo iptables -L`:
 
 ```bash
-sudo apt-get update -y
+null_resource.docker_installation (remote-exec): Chain INPUT (policy ACCEPT)
+null_resource.docker_installation (remote-exec): target     prot opt source               destination
+null_resource.docker_installation (remote-exec): ACCEPT     tcp  --  anywhere             anywhere             tcp dpt:8888
+null_resource.docker_installation (remote-exec): ACCEPT     tcp  --  anywhere             anywhere             tcp dpt:9001
+null_resource.docker_installation (remote-exec): ACCEPT     all  --  anywhere             anywhere             state RELATED,ESTABLISHED
+null_resource.docker_installation (remote-exec): ACCEPT     icmp --  anywhere             anywhere
+null_resource.docker_installation (remote-exec): ACCEPT     all  --  anywhere             anywhere
+null_resource.docker_installation (remote-exec): ACCEPT     udp  --  anywhere             anywhere             udp spt:ntp
+null_resource.docker_installation (remote-exec): ACCEPT     tcp  --  anywhere             anywhere             state NEW tcp dpt:8888 /* CUSTOM: allow ingress (see OracleCloud SecurityList for instance's subnet), for JupyterLab */
+null_resource.docker_installation (remote-exec): ACCEPT     tcp  --  anywhere             anywhere             state NEW tcp dpt:9001 /* CUSTOM: allow ingress (see OracleCloud SecurityList for instance's subnet), for Minio */
+null_resource.docker_installation (remote-exec): ACCEPT     tcp  --  anywhere             anywhere             state NEW tcp dpt:ssh
+null_resource.docker_installation (remote-exec): REJECT     all  --  anywhere             anywhere             reject-with icmp-host-prohibited
 
-# -- I saw this:
-sudo iptables -I INPUT -p tcp -m tcp --dport 9001 -j ACCEPT 
-# comment option not available in Oracle's Ubuntu # --comment "CUSTOM: allow ingress (see OracleCloud SecurityList for instance's subnet), for Minio"
-sudo iptables -I INPUT -p tcp -m tcp --dport 8888 -j ACCEPT  
-# comment option not available in Oracle's Ubuntu # --comment "CUSTOM: allow ingress (see OracleCloud SecurityList for instance's subnet), for JupyterLab"
-sudo netfilter-persistent save
-# sudo  iptables-save | sudo tee -a /etc/iptables/rules.v4
+null_resource.docker_installation (remote-exec): Chain FORWARD (policy ACCEPT)
+null_resource.docker_installation (remote-exec): target     prot opt source               destination
+null_resource.docker_installation (remote-exec): REJECT     all  --  anywhere             anywhere             reject-with icmp-host-prohibited
 
-# -- I also saw this (KO): 
-sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 9001 -j ACCEPT
-# - the above command gives me:
-# iptables: Index of insertion too big.
-sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 8888 -j ACCEPT
-# - the above command gives me:
-# iptables: Index of insertion too big.
-sudo netfilter-persistent save
+null_resource.docker_installation (remote-exec): Chain OUTPUT (policy ACCEPT)
+null_resource.docker_installation (remote-exec): target     prot opt source               destination
+null_resource.docker_installation (remote-exec): InstanceServices  all  --  anywhere             link-local/16
 
-# -- And I even saw this (KO):
-sudo iptables -I INPUT 5 -m state --state NEW -p tcp --dport 9001 -j ACCEPT  -m comment --comment "CUSTOM: allow ingress (see OracleCloud SecurityList for instance's subnet), for Minio"
-# - the above command gives me:
-# iptables: Index of insertion too big.
-sudo iptables -I INPUT 5 -m state --state NEW -p tcp --dport 8888 -j ACCEPT  -m comment --comment "CUSTOM: allow ingress (see OracleCloud SecurityList for instance's subnet), for JupyterLab"
-# - the above command gives me:
-# iptables: Index of insertion too big.
-
-sudo netfilter-persistent save
-
-sudo iptables -L
-```
-
-* After applying the iptables above, I get this:
-
-```bash
-sudo iptables -L
-Chain INPUT (policy ACCEPT)
-target     prot opt source               destination
-ACCEPT     tcp  --  anywhere             anywhere             tcp dpt:8888
-ACCEPT     tcp  --  anywhere             anywhere             tcp dpt:9001
-ACCEPT     all  --  anywhere             anywhere             state RELATED,ESTABLISHED
-ACCEPT     icmp --  anywhere             anywhere
-ACCEPT     all  --  anywhere             anywhere
-ACCEPT     udp  --  anywhere             anywhere             udp spt:ntp
-ACCEPT     tcp  --  anywhere             anywhere             state NEW tcp dpt:ssh
-REJECT     all  --  anywhere             anywhere             reject-with icmp-host-prohibited
-
-Chain FORWARD (policy ACCEPT)
-target     prot opt source               destination
-REJECT     all  --  anywhere             anywhere             reject-with icmp-host-prohibited
-
-Chain OUTPUT (policy ACCEPT)
-target     prot opt source               destination
-InstanceServices  all  --  anywhere             link-local/16
-
-Chain InstanceServices (1 references)
-target     prot opt source               destination
-ACCEPT     tcp  --  anywhere             169.254.0.2          owner UID match root tcp dpt:iscsi-target /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
-ACCEPT     tcp  --  anywhere             169.254.2.0/24       owner UID match root tcp dpt:iscsi-target /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
-ACCEPT     tcp  --  anywhere             169.254.4.0/24       owner UID match root tcp dpt:iscsi-target /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
-ACCEPT     tcp  --  anywhere             169.254.5.0/24       owner UID match root tcp dpt:iscsi-target /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
-ACCEPT     tcp  --  anywhere             169.254.0.2          tcp dpt:http /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
-ACCEPT     udp  --  anywhere             169.254.169.254      udp dpt:domain /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
-ACCEPT     tcp  --  anywhere             169.254.169.254      tcp dpt:domain /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
-ACCEPT     tcp  --  anywhere             169.254.0.3          owner UID match root tcp dpt:http /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
-ACCEPT     tcp  --  anywhere             169.254.0.4          tcp dpt:http /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
-ACCEPT     tcp  --  anywhere             169.254.169.254      tcp dpt:http /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
-ACCEPT     udp  --  anywhere             169.254.169.254      udp dpt:bootps /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
-ACCEPT     udp  --  anywhere             169.254.169.254      udp dpt:tftp /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
-ACCEPT     udp  --  anywhere             169.254.169.254      udp dpt:ntp /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
-REJECT     tcp  --  anywhere             link-local/16        tcp /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */ reject-with tcp-reset
-REJECT     udp  --  anywhere             link-local/16        udp /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */ reject-with icmp-port-unreachable
-
+null_resource.docker_installation (remote-exec): Chain InstanceServices (1 references)
+null_resource.docker_installation (remote-exec): target     prot opt source               destination
+null_resource.docker_installation (remote-exec): ACCEPT     tcp  --  anywhere             169.254.0.2          owner UID match root tcp dpt:iscsi-target /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
+null_resource.docker_installation (remote-exec): ACCEPT     tcp  --  anywhere             169.254.2.0/24       owner UID match root tcp dpt:iscsi-target /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
+null_resource.docker_installation (remote-exec): ACCEPT     tcp  --  anywhere             169.254.4.0/24       owner UID match root tcp dpt:iscsi-target /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
+null_resource.docker_installation (remote-exec): ACCEPT     tcp  --  anywhere             169.254.5.0/24       owner UID match root tcp dpt:iscsi-target /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
+null_resource.docker_installation (remote-exec): ACCEPT     tcp  --  anywhere             169.254.0.2          tcp dpt:http /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
+null_resource.docker_installation (remote-exec): ACCEPT     udp  --  anywhere             169.254.169.254      udp dpt:domain /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
+null_resource.docker_installation (remote-exec): ACCEPT     tcp  --  anywhere             169.254.169.254      tcp dpt:domain /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
+null_resource.docker_installation (remote-exec): ACCEPT     tcp  --  anywhere             169.254.0.3          owner UID match root tcp dpt:http /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
+null_resource.docker_installation (remote-exec): ACCEPT     tcp  --  anywhere             169.254.0.4          tcp dpt:http /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
+null_resource.docker_installation (remote-exec): ACCEPT     tcp  --  anywhere             169.254.169.254      tcp dpt:http /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
+null_resource.docker_installation (remote-exec): ACCEPT     udp  --  anywhere             169.254.169.254      udp dpt:bootps /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
+null_resource.docker_installation (remote-exec): ACCEPT     udp  --  anywhere             169.254.169.254      udp dpt:tftp /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
+null_resource.docker_installation (remote-exec): ACCEPT     udp  --  anywhere             169.254.169.254      udp dpt:ntp /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */
+null_resource.docker_installation (remote-exec): REJECT     tcp  --  anywhere             link-local/16        tcp /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */ reject-with tcp-reset
+null_resource.docker_installation (remote-exec): REJECT     udp  --  anywhere             link-local/16        udp /* See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule */ reject-with icmp-port-unreachable
 ```
 
 Or, with `firewalld`:

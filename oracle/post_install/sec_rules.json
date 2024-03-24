@@ -1,0 +1,176 @@
+{
+  "items": [
+    {
+      "compartmentId": "ocid1.tenancy.oc1..aaaaaaaawdca5brwcdw7mng3nxbvlx2pqxhnxm6gs3alrsi7visngutjtzvq",
+      "definedTags": {
+        "Oracle-Tags": {
+          "CreatedBy": "default/btherin@gmx.fr",
+          "CreatedOn": "2024-03-24T19:43:09.563Z"
+        }
+      },
+      "displayName": "Décoder l'éco Security Rules for root compartment",
+      "egressSecurityRules": [],
+      "freeformTags": {
+        "Department": "Décoder L'éco"
+      },
+      "id": "ocid1.securitylist.oc1.eu-paris-1.aaaaaaaakvcw5xhbz4x5zm6sqgsh3vuwikumte3pqjtabxcuymvck24vmr5a",
+      "ingressSecurityRules": [
+        {
+          "isStateless": false,
+          "protocol": "6",
+          "source": "0.0.0.0/0",
+          "sourceType": "CIDR_BLOCK",
+          "tcpOptions": {
+            "destinationPortRange": {
+              "max": 8888,
+              "min": 8888
+            }
+          },
+          "description": "allow inbound jupyterlab webui traffic"
+        },
+        {
+          "isStateless": false,
+          "protocol": "6",
+          "source": "0.0.0.0/0",
+          "sourceType": "CIDR_BLOCK",
+          "tcpOptions": {
+            "destinationPortRange": {
+              "max": 9001,
+              "min": 9001
+            }
+          },
+          "description": "allow inbound minio webui traffic"
+        }
+      ],
+      "lifecycleState": "AVAILABLE",
+      "timeCreated": "2024-03-24T19:43:09.595Z",
+      "vcnId": "ocid1.vcn.oc1.eu-paris-1.amaaaaaahehpodaa654xiidkrvlghj44z3lukzpcc6lcrbjxaucrdsnm23wa"
+    },
+    {
+      "compartmentId": "ocid1.tenancy.oc1..aaaaaaaawdca5brwcdw7mng3nxbvlx2pqxhnxm6gs3alrsi7visngutjtzvq",
+      "definedTags": {
+        "Oracle-Tags": {
+          "CreatedBy": "default/btherin@gmx.fr",
+          "CreatedOn": "2024-03-24T19:43:08.777Z"
+        }
+      },
+      "displayName": "Default Security List for decoderleco1_vcn_racine",
+      "egressSecurityRules": [
+        {
+          "destination": "0.0.0.0/0",
+          "destinationType": "CIDR_BLOCK",
+          "isStateless": false,
+          "protocol": "all"
+        }
+      ],
+      "freeformTags": {},
+      "id": "ocid1.securitylist.oc1.eu-paris-1.aaaaaaaaszviu3swtg2vuqggycxffvj6y7seqynhl732br4c4pnwlbcdcfxa",
+      "ingressSecurityRules": [
+        {
+          "isStateless": false,
+          "protocol": "6",
+          "source": "0.0.0.0/0",
+          "sourceType": "CIDR_BLOCK",
+          "tcpOptions": {
+            "destinationPortRange": {
+              "max": 22,
+              "min": 22
+            }
+          }
+        },
+        {
+          "icmpOptions": {
+            "code": 4,
+            "type": 3
+          },
+          "isStateless": false,
+          "protocol": "1",
+          "source": "0.0.0.0/0",
+          "sourceType": "CIDR_BLOCK"
+        },
+        {
+          "icmpOptions": {
+            "type": 3
+          },
+          "isStateless": false,
+          "protocol": "1",
+          "source": "10.23.0.0/20",
+          "sourceType": "CIDR_BLOCK"
+        }
+      ],
+      "lifecycleState": "AVAILABLE",
+      "timeCreated": "2024-03-24T19:43:08.831Z",
+      "vcnId": "ocid1.vcn.oc1.eu-paris-1.amaaaaaahehpodaa654xiidkrvlghj44z3lukzpcc6lcrbjxaucrdsnm23wa"
+    },
+    {
+      "compartmentId": "ocid1.tenancy.oc1..aaaaaaaawdca5brwcdw7mng3nxbvlx2pqxhnxm6gs3alrsi7visngutjtzvq",
+      "definedTags": {
+        "Oracle-Tags": {
+          "CreatedBy": "default/btherin@gmx.fr",
+          "CreatedOn": "2023-04-02T08:46:26.637Z"
+        }
+      },
+      "displayName": "Default Security List for vcn-20230402-1044",
+      "egressSecurityRules": [
+        {
+          "destination": "0.0.0.0/0",
+          "destinationType": "CIDR_BLOCK",
+          "isStateless": false,
+          "protocol": "all"
+        }
+      ],
+      "freeformTags": {},
+      "id": "ocid1.securitylist.oc1.eu-paris-1.aaaaaaaav4u4owd4qh56xtynj7vo3dkba6e5y7cvfqjbvoy7ze4v7yaml2dq",
+      "ingressSecurityRules": [
+        {
+          "isStateless": false,
+          "protocol": "6",
+          "source": "0.0.0.0/0",
+          "sourceType": "CIDR_BLOCK",
+          "tcpOptions": {
+            "destinationPortRange": {
+              "max": 22,
+              "min": 22
+            }
+          }
+        },
+        {
+          "icmpOptions": {
+            "code": 4,
+            "type": 3
+          },
+          "isStateless": false,
+          "protocol": "1",
+          "source": "0.0.0.0/0",
+          "sourceType": "CIDR_BLOCK"
+        },
+        {
+          "icmpOptions": {
+            "type": 3
+          },
+          "isStateless": false,
+          "protocol": "1",
+          "source": "10.0.0.0/16",
+          "sourceType": "CIDR_BLOCK"
+        },
+        {
+          "isStateless": false,
+          "protocol": "6",
+          "source": "0.0.0.0/0",
+          "sourceType": "CIDR_BLOCK",
+          "tcpOptions": {
+            "destinationPortRange": {
+              "max": 3389,
+              "min": 3389
+            }
+          },
+          "description": "RDP"
+        }
+      ],
+      "lifecycleState": "AVAILABLE",
+      "timeCreated": "2023-04-02T08:46:26.745Z",
+      "vcnId": "ocid1.vcn.oc1.eu-paris-1.amaaaaaahehpodaa6nof2pjk7vaeuz3ve37btgzjpxey2plhyynfzwqg65eq"
+    }
+  ],
+  "opcRequestId": "68752880EA17-11EE-BA3B-2D59954A7/5D1F148C8D3157F2D25513CBC2737854/44D2BBCF5849B401C224BD9B4200E439"
+}
