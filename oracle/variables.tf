@@ -48,3 +48,11 @@ variable "subnetA_pub" {
     }
   }
 }
+
+variable "internet_gateway_A" {
+  description = "The details of the internet gateway"
+  default = {
+    display_name : "IC_IG-A"
+    ig_destination = "0.0.0.0/0"
+  }
+}
