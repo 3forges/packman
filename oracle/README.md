@@ -33,7 +33,7 @@ terraform apply "my.first.destroy.powershell.plan.tfplan"
 
 ## Before installing Docker: IP tables
 
-For now, I think the Ingress Rules I setup are good, as far as I understand, and for minio web app access on 9001 port.
+For now, I think the Ingress Rules I setup are good, as far as I understand, and for minio web app access on `9001` port.
 
 I prepare this section, because according my readigs, it seems it might turn out that I need to run an Iptables setup in the VM, to complete the Ingress rules.
 
@@ -326,7 +326,7 @@ sudo reboot -h now
 
 ```bash
 sudo mkdir -p ~/minio/data
-sudo docker run -d \
+docker run -d \
    -p 0.0.0.0:9000:9000 \
    -p 0.0.0.0:9001:9001 \
    --name minio \

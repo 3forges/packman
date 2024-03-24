@@ -4,3 +4,11 @@ data "oci_core_subnet" "subnetA_pub" {
   #Required
   subnet_id = oci_core_subnet.subnetA_pub.id
 }
+
+# ---
+#  Get root compartment's informations
+
+data "oci_identity_compartment" "root_compartment" {
+  #Required
+  id = var.tenancy_ocid
+}

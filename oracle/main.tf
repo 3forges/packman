@@ -1,4 +1,6 @@
 
+/* ---> I will put the VM and everything, into the root compartment directly
+
 # ---
 #  https://docs.oracle.com/en-us/iaas/developer-tutorials/tutorials/first-compartment/01-summary.htm
 resource "oci_identity_compartment" "first-compartment" {
@@ -7,11 +9,12 @@ resource "oci_identity_compartment" "first-compartment" {
   description    = "Compartment for Terraform resources of Bob in Decoder l'eco."
   name           = "decoderleco_demo1"
 }
+*/
 
 # Source from https://registry.terraform.io/providers/oracle/oci/latest/docs/data-sources/identity_availability_domains
 
 data "oci_identity_availability_domains" "ads" {
-  compartment_id = oci_identity_compartment.first-compartment.id
+  compartment_id = data.oci_identity_compartment.root_compartment.id
 }
 
 
@@ -21,7 +24,7 @@ data "oci_identity_availability_domains" "ads" {
 
 resource "oci_core_vcn" "decoderleco1_vcn_racine" {
   #Required
-  compartment_id = oci_identity_compartment.first-compartment.id
+  compartment_id = data.oci_identity_compartment.root_compartment.id
   cidr_blocks    = var.vcn_racine.cidr_blocks
   #Optional
   display_name = var.vcn_racine.display_name
@@ -33,7 +36,7 @@ resource "oci_core_vcn" "decoderleco1_vcn_racine" {
 
 resource "oci_core_subnet" "subnetA_pub" {
   #Required
-  compartment_id = oci_identity_compartment.first-compartment.id
+  compartment_id = data.oci_identity_compartment.root_compartment.id
   vcn_id         = oci_core_vcn.decoderleco1_vcn_racine.id
   cidr_block     = var.subnetA_pub.cidr_block
   #Optional
@@ -48,7 +51,7 @@ resource "oci_core_subnet" "subnetA_pub" {
 resource "oci_core_instance" "ubuntu_vm" {
   # Required
   availability_domain = data.oci_identity_availability_domains.ads.availability_domains[0].name
-  compartment_id      = oci_identity_compartment.first-compartment.id
+  compartment_id      = data.oci_identity_compartment.root_compartment.id
   # shape = "VM.Standard2.1"
   shape = "VM.Standard.A1.Flex"
   shape_config {
@@ -89,7 +92,7 @@ resource "oci_core_instance" "ubuntu_vm" {
 ############################################
 
 resource "oci_core_internet_gateway" "the_internet_gateway" {
-  compartment_id = oci_identity_compartment.first-compartment.id
+  compartment_id = data.oci_identity_compartment.root_compartment.id
   vcn_id         = oci_core_vcn.decoderleco1_vcn_racine.id
   display_name   = var.internet_gateway_A.display_name
 }
@@ -101,7 +104,7 @@ resource "oci_core_internet_gateway" "the_internet_gateway" {
 
 resource "oci_core_default_route_table" "the_route_table" {
   #Required
-  compartment_id             = oci_identity_compartment.first-compartment.id
+  compartment_id             = data.oci_identity_compartment.root_compartment.id
   manage_default_resource_id = oci_core_vcn.decoderleco1_vcn_racine.default_route_table_id
   # Optional
   display_name = var.subnetA_pub.route_table.display_name
@@ -180,9 +183,10 @@ resource "oci_core_security_list" "root_compartment_security_list" {
   //  }
 }
 
+/**
 resource "oci_core_security_list" "first_compartment_security_list" {
   #Required
-  compartment_id = oci_identity_compartment.first-compartment.id
+  compartment_id = data.oci_identity_compartment.root_compartment.id
   vcn_id         = oci_core_vcn.decoderleco1_vcn_racine.id
 
   #Optional
@@ -237,4 +241,71 @@ resource "oci_core_security_list" "first_compartment_security_list" {
   //      code = 4
   //    }
   //  }
+}
+*/
+
+/**/
+resource "null_resource" "docker_installation" {
+  # ...
+
+  # Establishes connection to be used by all
+  # generic remote provisioners (i.e. file/remote-exec)
+  connection {
+    type = "ssh"
+    user = var.vm_ssh_auth_desired_keypair.username
+    // password = var.root_password
+    private_key = file(var.vm_ssh_auth_desired_keypair.private_key_file)
+    host        = oci_core_instance.ubuntu_vm.public_ip
+  }
+  provisioner "file" {
+    source      = "./post_install/setup_iptables.sh"
+    destination = "/tmp/setup_iptables.sh"
+  }
+  provisioner "file" {
+    source      = "./post_install/install_docker.sh"
+    destination = "/tmp/install_docker.sh"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/setup_iptables.sh",
+      "/tmp/setup_iptables.sh args",
+      "chmod +x /tmp/install_docker.sh",
+      "/tmp/install_docker.sh args"
+    ]
+  }
+}
+
+# ---
+#  A dummy minio container is deployed, just to test
+#  that we can access it through the Public IP on 
+#  port 9001 : to test the ingress security rules defined above
+resource "null_resource" "minio_deployment" {
+  # ...
+
+  # Establishes connection to be used by all
+  # generic remote provisioners (i.e. file/remote-exec)
+  connection {
+    type = "ssh"
+    user = var.vm_ssh_auth_desired_keypair.username
+    // password = var.root_password
+    private_key = file(var.vm_ssh_auth_desired_keypair.private_key_file)
+    host        = oci_core_instance.ubuntu_vm.public_ip
+  }
+  # ---
+  #  A dummy minio container is deployed, just to test
+  #  that we can access it through the Public IP on 
+  #  port 9001 : to test the ingress security rules defined above
+  provisioner "file" {
+    source      = "./post_install/deploy_minio.sh"
+    destination = "/tmp/deploy_minio.sh"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/deploy_minio.sh",
+      "/tmp/deploy_minio.sh args",
+    ]
+  }
+  depends_on = [
+    null_resource.docker_installation
+  ]
 }
