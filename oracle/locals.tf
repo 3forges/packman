@@ -22,6 +22,8 @@ locals {
     SSH into the VM:   ssh -i ${var.vm_ssh_auth_desired_keypair.private_key_file} ${var.vm_ssh_auth_desired_keypair.username}@${i.public_ip~}
     \n
     Go to the Minio Admin UI : http://${i.public_ip~}:9001
+    \n
+    SSH Tunnel locally the JupyterLab : ssh -L 8888:localhost:8888 -i ${var.vm_ssh_auth_desired_keypair.private_key_file} ${var.vm_ssh_auth_desired_keypair.username}@${i.public_ip~}
     EOT
   ]
   # ubuntu_vm_ssh_details = [
