@@ -19,7 +19,7 @@ terraform fmt
 terraform plan -out="my.first.powershell.plan.tfplan"
 terraform apply -auto-approve "my.first.powershell.plan.tfplan"
 
-
+terraform plan -out="my.first.powershell.plan.tfplan"; terraform apply -auto-approve "my.first.powershell.plan.tfplan"
 ```
 
 * Destroy it all:
@@ -29,6 +29,7 @@ terraform apply -auto-approve "my.first.powershell.plan.tfplan"
 terraform plan -destroy -out="my.first.destroy.powershell.plan.tfplan"
 terraform apply "my.first.destroy.powershell.plan.tfplan"
 
+terraform plan -destroy -out="my.first.destroy.powershell.plan.tfplan"; terraform apply "my.first.destroy.powershell.plan.tfplan"
 ```
 
 ## Before installing Docker: IP tables

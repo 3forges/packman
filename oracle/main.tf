@@ -39,6 +39,9 @@ resource "oci_core_subnet" "subnetA_pub" {
   compartment_id = data.oci_identity_compartment.root_compartment.id
   vcn_id         = oci_core_vcn.decoderleco1_vcn_racine.id
   cidr_block     = var.subnetA_pub.cidr_block
+  # ---
+  #  https://github.com/hiddify/Hiddify-Manager/blob/9c5afa04227fa58ba904046b25a79ad9d73acc71/btn-deploy/oracle/network.tf#L21
+  # route_table_id = oci_core_default_route_table.the_route_table
   #Optional
   display_name               = var.subnetA_pub.display_name
   prohibit_public_ip_on_vnic = !var.subnetA_pub.is_public
@@ -265,12 +268,18 @@ resource "null_resource" "docker_installation" {
     source      = "./post_install/install_docker.sh"
     destination = "/tmp/install_docker.sh"
   }
+  provisioner "file" {
+    source      = "./post_install/install_docker_compose.sh"
+    destination = "/tmp/install_docker_compose.sh"
+  }
   provisioner "remote-exec" {
     inline = [
       "chmod +x /tmp/setup_iptables.sh",
-      "/tmp/setup_iptables.sh args",
+      "/tmp/setup_iptables.sh",
       "chmod +x /tmp/install_docker.sh",
-      "/tmp/install_docker.sh args"
+      "/tmp/install_docker.sh",
+      "chmod +x /tmp/install_docker_compose.sh",
+      "/tmp/install_docker_compose.sh"
     ]
   }
 }
@@ -309,3 +318,36 @@ resource "null_resource" "minio_deployment" {
     null_resource.docker_installation
   ]
 }
+
+# ---
+#  Jupyterlab Deployment
+resource "null_resource" "jupyterlab_deployment" {
+  # ...
+
+  # Establishes connection to be used by all
+  # generic remote provisioners (i.e. file/remote-exec)
+  connection {
+    type = "ssh"
+    user = var.vm_ssh_auth_desired_keypair.username
+    // password = var.root_password
+    private_key = file(var.vm_ssh_auth_desired_keypair.private_key_file)
+    host        = oci_core_instance.ubuntu_vm.public_ip
+  }
+  # ---
+  #  Jupyterlab Deployment
+  provisioner "file" {
+    source      = "./post_install/deploy_jupyterlab.sh"
+    destination = "/tmp/deploy_jupyterlab.sh"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/deploy_jupyterlab.sh",
+      "/tmp/deploy_jupyterlab.sh",
+    ]
+  }
+  depends_on = [
+    null_resource.docker_installation
+  ]
+}
+
+#deploy_jupyterlab.sh
