@@ -2,10 +2,12 @@
 
 sudo mkdir -p /usr/local/bin/
 
-sudo apt-get install -y jq
+sudo apt-get install -y jq figlet
 
 
 # 1./ Install arkade
+figlet 'Install arkade'
+
 curl -sLS https://get.arkade.dev | sudo sh
 
 arkade version
@@ -13,6 +15,7 @@ arkade version
 
 # 2./ Install k3d
 
+figlet 'Install k3d'
 arkade get k3d
 
 sudo mv ${HOME}/.arkade/bin/k3d /usr/local/bin/
@@ -20,12 +23,16 @@ sudo mv ${HOME}/.arkade/bin/k3d /usr/local/bin/
 
 # 2./ Install kubectl and helm
 
+figlet 'Install kubectl'
+
 arkade get kubectl
 
 sudo mv ${HOME}/.arkade/bin/kubectl /usr/local/bin/
 
 kubectl version --client
 
+
+figlet 'Install helm'
 
 arkade get helm
 
@@ -36,6 +43,7 @@ helm version
 
 # 4./ create k3d kubernetes cluster
 
+figlet 'create k3d kubernetes cluster'
 # ---
 # K3D_NET_NAME: the name of the docker network used by the k3d cluster
 export K3D_NET_NAME="decoderleco_knet"
@@ -49,26 +57,37 @@ kubectl cluster-info
 # 5./ deploy metallb
 
 
+figlet 'deploy metallb'
+export METALLB_K8S_NAMESPACE="metallb-system"
 # kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.10.3/manifests/namespace.yaml
 # kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.10.3/manifests/metallb.yaml
 # kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.10.3/manifests/namespace.yaml
 # kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.10.3/manifests/metallb.yaml
 
-## 5.a) Get the Bitnami helm Chart and set the desired configuration directly into the [./templates/controller/configmap.yaml] Helm template file
+
+figlet 'get helm chart'
+
+## 5.a) Get the Bitnami helm Chart and set the Metallb desired configuration directly into the [./templates/controller/configmap.yaml] Helm template file
 
 # https://github.com/bitnami/charts/tree/main/bitnami/metallb/#installing-the-chart
 
-git clone https://github.com/bitnami/charts ./bitnamischarts
+# git clone https://github.com/bitnami/charts ./bitnamischarts
+export DESIRED_VERSION=136846926733d172c3d52646e1576188839a063e
+export DESIRED_BRANCH=main
+export BITNAMI_CHARTS_REPO_URL=https://github.com/bitnami/charts
+git clone -b ${DESIRED_BRANCH} --depth 1  --single-branch ${BITNAMI_CHARTS_REPO_URL} ./bitnamischarts
 
 cd ./bitnamischarts
 
-git checkout main
+git checkout ${DESIRED_VERSION} || true
 # The version i tested which shouldbe desired:
 # $ git rev-parse --short=40 HEAD
 # 136846926733d172c3d52646e1576188839a063e
 
 cd bitnami/metallb
 
+
+figlet 'Metallb config'
 
 export K3D_NET_CIDR_BLOCK=$(docker network inspect ${K3D_NET_NAME} | jq '. [0].IPAM.Config[0].Subnet' | tr -d '"')
 
@@ -125,6 +144,8 @@ EOF
 ## 5.b) deploy metallb bitnamis helm chart
 
 
+figlet 'Deploy Metallb  with Helm'
+
 
 # now we need to deploy our helm charts using the appropriate values.yaml
 helm dependency build
@@ -132,13 +153,13 @@ export HELM_MLB_RELEASE_NAME="metallb-decoderleco"
 # helm install -f ./values.yaml ${HELM_MLB_RELEASE_NAME} ./
 # helm delete ${HELM_MLB_RELEASE_NAME}
 
-kubectl create ns metallb-system
-helm install -n metallb-system -f ./values.yaml ${HELM_MLB_RELEASE_NAME} ./
-# helm delete ${HELM_MLB_RELEASE_NAME} -n metallb-system
+kubectl create ns ${METALLB_K8S_NAMESPACE}
+helm install -n ${METALLB_K8S_NAMESPACE} -f ./values.yaml ${HELM_MLB_RELEASE_NAME} ./
+# helm delete ${HELM_MLB_RELEASE_NAME} -n ${METALLB_K8S_NAMESPACE}
 
-# kubectl get all -n metallb-system
-# kubectl describe cm -n metallb-system
-# kubectl get cm -n metallb-system
+# kubectl get all -n ${METALLB_K8S_NAMESPACE}
+# kubectl describe cm -n ${METALLB_K8S_NAMESPACE}
+# kubectl get cm -n ${METALLB_K8S_NAMESPACE}
 
 
 
@@ -146,6 +167,8 @@ helm install -n metallb-system -f ./values.yaml ${HELM_MLB_RELEASE_NAME} ./
 
 # ---
 # 6./ DEPLOY NGINX TO TEST IF NGINX GETS AN EXTERNAL IP in the k3d docker network
+
+figlet 'DEPLOY NGINX'
 
 cat <<EOF >./nginx-deployment.yaml
 apiVersion: apps/v1
@@ -202,7 +225,7 @@ cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  namespace: metallb-system
+  namespace: ${METALLB_K8S_NAMESPACE}
   name: ${HELM_MLB_RELEASE_NAME}-config
   labels:
     app.kubernetes.io/instance: metallb-decoderleco
@@ -212,7 +235,7 @@ metadata:
     helm.sh/chart: metallb-6.1.4
   annotations:
     meta.helm.sh/release-name: metallb-decoderleco
-    meta.helm.sh/release-namespace: metallb-system
+    meta.helm.sh/release-namespace: ${METALLB_K8S_NAMESPACE}
     kubectl.kubernetes.io: last-applied-configuration
 data:
   config: |
@@ -222,8 +245,8 @@ data:
       addresses:
       - $K3D_NET_RANGE
 EOF
-# kubectl delete cm/${HELM_MLB_RELEASE_NAME}-config -n metallb-system
+# kubectl delete cm/${HELM_MLB_RELEASE_NAME}-config -n ${METALLB_K8S_NAMESPACE}
 
-# kubectl get all -n metallb-system
-# kubectl describe cm -n metallb-system
-# kubectl get cm -n metallb-system
+# kubectl get all -n ${METALLB_K8S_NAMESPACE}
+# kubectl describe cm -n ${METALLB_K8S_NAMESPACE}
+# kubectl get cm -n ${METALLB_K8S_NAMESPACE}

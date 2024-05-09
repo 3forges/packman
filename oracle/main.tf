@@ -351,3 +351,36 @@ resource "null_resource" "jupyterlab_deployment" {
 }
 
 #deploy_jupyterlab.sh
+
+
+
+# ---
+# Provision the Kubernetes Cluster (K3D/K3S/METALLB)
+resource "null_resource" "provision_kubernetes" {
+  # ...
+
+  # Establishes connection to be used by all
+  # generic remote provisioners (i.e. file/remote-exec)
+  connection {
+    type = "ssh"
+    user = var.vm_ssh_auth_desired_keypair.username
+    // password = var.root_password
+    private_key = file(var.vm_ssh_auth_desired_keypair.private_key_file)
+    host        = oci_core_instance.ubuntu_vm.public_ip
+  }
+  # ---
+  #  Jupyterlab Deployment
+  provisioner "file" {
+    source      = "./oracle/post_install/kubernetes/k3d-metallb/terraform.provisioner.sh"
+    destination = "/tmp/k3d-metallb.terraform.provisioner.sh"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/k3d-metallb.terraform.provisioner.sh",
+      "/tmp/k3d-metallb.terraform.provisioner.sh",
+    ]
+  }
+  depends_on = [
+    null_resource.docker_installation
+  ]
+}

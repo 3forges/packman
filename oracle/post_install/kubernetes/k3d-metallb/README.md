@@ -446,3 +446,40 @@ https://metallb.universe.tf/troubleshooting/#check-if-the-arp-requests-reach-the
 actually i think i am in this case : https://metallb.universe.tf/troubleshooting/#metallb-says-it-advertises-the-service-but-reaching-the-service-does-not-work
 
 so there i will have to do multple netqworking tests, L2 layer level and understandng fully how to test ARP protocol.
+
+https://www.youtube.com/watch?v=cn8Zxh9bPio
+
+https://www.google.com/search?q=linux+tutorial+troubleshooting+the+arp+protocol&sca_esv=e366935364740875&sca_upv=1&ei=X_47Zv-uNtWKkdUP3cqXkAk&ved=0ahUKEwi_2srxjv-FAxVVRaQEHV3lBZIQ4dUDCBA&uact=5&oq=linux+tutorial+troubleshooting+the+arp+protocol&gs_lp=Egxnd3Mtd2l6LXNlcnAiL2xpbnV4IHR1dG9yaWFsIHRyb3VibGVzaG9vdGluZyB0aGUgYXJwIHByb3RvY29sMgoQABiwAxjWBBhHMgoQABiwAxjWBBhHMgoQABiwAxjWBBhHMgoQABiwAxjWBBhHMgoQABiwAxjWBBhHMgoQABiwAxjWBBhHMgoQABiwAxjWBBhHMgoQABiwAxjWBBhHSLoJUABYAHABeAGQAQCYAQCgAQCqAQC4AQPIAQCYAgGgAgeYAwCIBgGQBgiSBwExoAcA&sclient=gws-wiz-serp
+
+https://www.redhat.com/sysadmin/beginners-guide-network-troubleshooting-linux
+
+
+
+We can check the entries in our ARP table with the ip neighbor command:
+
+```bash
+# ip neighbor show
+192.168.122.1 dev eth0 lladdr 52:54:00:11:23:84 REACHABLE
+```
+
+Note that the gateway’s MAC address is populated (we’ll talk more about how to find your gateway in the next section). If there was a problem with ARP, then we would see a resolution failure:
+
+```bash
+# ip neighbor show
+192.168.122.1 dev eth0 FAILED
+```
+
+Another common use of the ip neighbor command involves manipulating the ARP table. Imagine that your networking team just replaced the upstream router (which is your server’s default gateway). The MAC address may have changed as well since MAC addresses are hardware addresses that are assigned at the factory.
+
+https://www.ithands-on.com/2021/08/linux-101-troubleshooting-arp.html
+
+
+
+### Troubleshooting the ARP inside docker for the k3d nodes
+
+Okay, so now we are going to explicitly put in clear words the problem, and say as prcisely as possible what test we are going to run, before running any command.
+
+* we are going to run arp troubleshooting commands in a given docker network: so we will need to run thse commands from within inside a container, in which we have installed all the tools we'll need to troubleshoot the network.
+* this container we are going to run the troubleshooting commands in, are going to be:
+  * the 2 docker containers created by `k3d`, namely: `k3d-k8-lab-server-0`, and `k3d-k8-lab-agent-0`.
+  * anoher third container that i'm going to create with just a docker compose, 

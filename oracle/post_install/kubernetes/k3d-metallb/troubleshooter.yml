@@ -1,0 +1,92 @@
+version: '3.7'
+# - https://www.mongodb.com/compatibility/docker
+services:
+  k3d_net_plumber:
+    image: decoderleco/k3d_net_plumber:0.0.1-alpha
+    build:
+      context: ./oci/k3d_net_plumber/
+      dockerfile: Dockerfile
+      # dockerfile: prod.Dockerfile
+      args:
+        PLUMBER_HOME: /usr/plumber
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      # - k3d_net_plumber_data:/usr/plumber/data
+    restart: always
+    stdin_open: true 
+    tty: true
+    # env_file: .troubleshooter.env
+    environment:
+      # - K3D_NET_FIRST_ADDR=172.19.0.240
+      - K3D_NET_FIRST_ADDR=$K3D_NET_FIRST_ADDR
+      # - K3D_NET_RANGE=172.19.0.240/29
+      - K3D_NET_RANGE=$K3D_NET_RANGE
+    ports:
+        - '0.0.0.0:8888:8888'
+    networks:
+      dataviz_poc_net:
+        aliases:
+          - api.dataviz_poc.io
+          - dataviz_poc.io
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongodb/mongodb-community-server:6.0-ubi8
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=dataviz_poc
+      - MONGO_INITDB_ROOT_PASSWORD=dataviz_poc
+    ports:
+      - '0.0.0.0:27017:27017'
+      # -
+      #  in /C/Windows/System32/drivers/etc/hosts
+      # -
+      # 192.168.218.202        mongo.dataviz_poc.io
+      # -
+      #  Then with Mongoose, use the MongoDBURL WITHOUT the 
+      #  Root username and password : 
+      #      mongodb://mongo.dataviz_poc.io:27017/
+      # --- 
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - dataviz_poc_mongo_data:/data/db
+    networks:
+      dataviz_poc_net:
+        aliases:
+          - mongo.dataviz_poc.io
+  postgres:
+    image: postgres:13.3
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "decolderleco"
+      POSTGRES_USER: "pierre"
+      POSTGRES_PASSWORD: "chaillot"
+    ports:
+      - "0.0.0.0:5432:5432"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - dataviz_poc_postgres_data:/var/lib/postgresql/data
+    networks:
+      dataviz_poc_net:
+        aliases:
+          - postgres.dataviz_poc.io
+
+# volumes:
+#   k3d_net_plumber_data:
+networks:
+  decoderleco_knet:
+    driver: bridge
+
+
+
+
+
+
+
+
+
+# ------------------
