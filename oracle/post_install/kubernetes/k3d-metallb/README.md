@@ -482,4 +482,393 @@ Okay, so now we are going to explicitly put in clear words the problem, and say 
 * we are going to run arp troubleshooting commands in a given docker network: so we will need to run thse commands from within inside a container, in which we have installed all the tools we'll need to troubleshoot the network.
 * this container we are going to run the troubleshooting commands in, are going to be:
   * the 2 docker containers created by `k3d`, namely: `k3d-k8-lab-server-0`, and `k3d-k8-lab-agent-0`.
-  * anoher third container that i'm going to create with just a docker compose, 
+  * anoher third container that i'm going to create with just a docker compose, that container will be connected to the same docker network as the 2 containers of the k3d cluster. I'll call that container the troubleshooter container.
+* we are also going to run arp command from 2 kubernetes pods within the k3d cluster:
+  * Indeed, `metallb` is made of 2 components:
+    * The kubernetes `controller` is in charge of assigning IPs to the services
+    * The kubernetes speakers are in charge of announcing the services via L2 or BGP
+  * So the 2 pods i will create:
+    * will both have only on container, based upon the same image as our troubleshooter docker compose
+    * one of the pods will impersonate the speaker: to perform, as much as possible, the same arp operations than the actual metallb speaker
+    * one of the pods will impersonate the controller: to perform, as much as possible, the same arp operations than the actual metallb controller
+
+## Troubleshooter commands
+
+### In docker-compose version
+
+#### Test the (Physical link) layer 1
+
+```bash
+
+cd ~/packman/oracle/post_install/kubernetes/k3d-metallb/
+
+docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ip link show"
+
+docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ip -br link show"
+
+```
+
+To test if layer 1 (physical layer) is fine (the physical link is established, up n running):
+
+```bash
+docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ip -s link show eth0@if66"
+
+docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ip -s link show eth0"
+
+
+```
+
+Gives as example output :
+
+```bash
+~/packman/oracle/post_install/kubernetes/k3d-metallb$ docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ip -s link show eth0"     WARN[0000] The "K3D_NET_FIRST_ADDR" variable is not set. Defaulting to a blank string.
+WARN[0000] The "K3D_NET_RANGE" variable is not set. Defaulting to a blank string.
+WARN[0000] /home/ubuntu/packman/oracle/post_install/kubernetes/k3d-metallb/troubleshooter.yml: `version` is obsolete
+65: eth0@if66: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default
+    link/ether 02:42:ac:14:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    RX:  bytes packets errors dropped  missed   mcast
+          1576      20      0       0       0       0
+    TX:  bytes packets errors dropped carrier collsns
+             0       0      0       0       0       0
+
+```
+
+Its a bit like a ping, where 20 packets are sent for the test.
+
+I could also run the `ethtool eth0` comman in the container, and i got the following interesting result:
+
+```bash
+~/packman/oracle/post_install/kubernetes/k3d-metallb$ docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ethtool eth0"
+WARN[0000] The "K3D_NET_FIRST_ADDR" variable is not set. Defaulting to a blank string.
+WARN[0000] The "K3D_NET_RANGE" variable is not set. Defaulting to a blank string.
+WARN[0000] /home/ubuntu/packman/oracle/post_install/kubernetes/k3d-metallb/troubleshooter.yml: `version` is obsolete
+netlink error: Operation not permitted
+Settings for eth0:
+        Supported ports: [  ]
+        Supported link modes:   Not reported
+        Supported pause frame use: No
+        Supports auto-negotiation: No
+        Supported FEC modes: Not reported
+        Advertised link modes:  Not reported
+        Advertised pause frame use: No
+        Advertised auto-negotiation: No
+        Advertised FEC modes: Not reported
+        Speed: 10000Mb/s
+        Duplex: Full
+        Auto-negotiation: off
+        Port: Twisted Pair
+        PHYAD: 0
+        Transceiver: internal
+        MDI-X: Unknown
+        Link detected: yes
+
+```
+
+#### ARP Protocol tests
+
+* I check the entries in our ARP table with the ip neighbor command, and I get:
+
+```bash
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$ docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ip neighbor show"
+WARN[0000] The "K3D_NET_FIRST_ADDR" variable is not set. Defaulting to a blank string.
+WARN[0000] The "K3D_NET_RANGE" variable is not set. Defaulting to a blank string.
+WARN[0000] /home/ubuntu/packman/oracle/post_install/kubernetes/k3d-metallb/troubleshooter.yml: `version` is obsolete
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$ docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "cat /proc/net/arp"
+WARN[0000] The "K3D_NET_FIRST_ADDR" variable is not set. Defaulting to a blank string.
+WARN[0000] The "K3D_NET_RANGE" variable is not set. Defaulting to a blank string.
+WARN[0000] /home/ubuntu/packman/oracle/post_install/kubernetes/k3d-metallb/troubleshooter.yml: `version` is obsolete
+IP address       HW type     Flags       HW address            Mask     Device
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$
+
+```
+
+Now to start with, obviously the ARP cache is empty in my troubleshooter container. AS you can see below, its IP address is `172.20.0.2`
+
+And here is how i got the IP address, in the docker network, of the 2 containers of the k3d kubernetes cluster:
+
+```bash
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$ docker inspect k3d-k8-lab-server-0 -f "{{json .NetworkSettings.Networks }}" | jq .
+{
+  "decoderleco_knet": {
+    "IPAMConfig": null,
+    "Links": null,
+    "Aliases": null,
+    "MacAddress": "02:42:ac:13:00:02",
+    "NetworkID": "527594a23e5d437398a6f821fd61d6c78287f7885b45de3cba19e99abe53a267",
+    "EndpointID": "0cc71ea8885048e252d1fe26630dc8af9a5105dda6102dc1dc3b8e1b78b3b71f",
+    "Gateway": "172.19.0.1",
+    "IPAddress": "172.19.0.2",
+    "IPPrefixLen": 16,
+    "IPv6Gateway": "",
+    "GlobalIPv6Address": "",
+    "GlobalIPv6PrefixLen": 0,
+    "DriverOpts": null,
+    "DNSNames": [
+      "k3d-k8-lab-server-0",
+      "6aacfb0dacf0"
+    ]
+  }
+}
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$ docker inspect k3d-k8-lab-agent-0 -f "{{json .NetworkSettings.Networks }}" | jq .
+{
+  "decoderleco_knet": {
+    "IPAMConfig": null,
+    "Links": null,
+    "Aliases": null,
+    "MacAddress": "02:42:ac:13:00:03",
+    "NetworkID": "527594a23e5d437398a6f821fd61d6c78287f7885b45de3cba19e99abe53a267",
+    "EndpointID": "223ecbd836191ad59641ecabe7eafc7765ca53da2f8007cc82d938b8d877507f",
+    "Gateway": "172.19.0.1",
+    "IPAddress": "172.19.0.3",
+    "IPPrefixLen": 16,
+    "IPv6Gateway": "",
+    "GlobalIPv6Address": "",
+    "GlobalIPv6PrefixLen": 0,
+    "DriverOpts": null,
+    "DNSNames": [
+      "k3d-k8-lab-agent-0",
+      "b6d39531e742"
+    ]
+  }
+}
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$ docker inspect k3d-metallb-k3d_net_plumber-1 -f "{{json .NetworkSettings.Networks }}" | jq .
+{
+  "k3d-metallb_decoderleco_knet": {
+    "IPAMConfig": {},
+    "Links": null,
+    "Aliases": [
+      "k3d-metallb-k3d_net_plumber-1",
+      "k3d_net_plumber",
+      "k3d_net_plumber.dataviz_poc.io",
+      "k3d_net_plumber.io"
+    ],
+    "MacAddress": "02:42:ac:14:00:02",
+    "NetworkID": "1abfc26a47c94de95a29377e532de04655ad0a40cd04953a9b115c732a4fb78b",
+    "EndpointID": "0cbd1399ab9880bdfcea06cfbf910d6b7112516fec2d9d0809f7904ae623071a",
+    "Gateway": "172.20.0.1",
+    "IPAddress": "172.20.0.2",
+    "IPPrefixLen": 16,
+    "IPv6Gateway": "",
+    "GlobalIPv6Address": "",
+    "GlobalIPv6PrefixLen": 0,
+    "DriverOpts": null,
+    "DNSNames": [
+      "k3d-metallb-k3d_net_plumber-1",
+      "k3d_net_plumber",
+      "k3d_net_plumber.dataviz_poc.io",
+      "k3d_net_plumber.io",
+      "e213716c3d8d"
+    ]
+  }
+}
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$
+
+
+```
+
+From the above outpout of docker inspect command for the 3 containers, we get those informations :
+
+* container `k3d-k8-lab-server-0` has:
+  * IP Addresss: `172.19.0.2`
+  * MAC Addresss: `02:42:ac:13:00:02`
+  * Gateway: `172.19.0.1`
+* container `k3d-k8-lab-agent-0` has:
+  * IP Addresss: `172.19.0.3`
+  * MAC Addresss: `02:42:ac:13:00:03`
+  * Gateway: `172.19.0.1`
+* container `k3d-metallb-k3d_net_plumber-1` is in the docker network named `k3d-metallb_decoderleco_knet` (that's the troubleshooter ) has:
+  * IP Addresss: `172.20.0.2`
+  * MAC Addresss: `02:42:ac:14:00:02`
+  * Gateway: `172.20.0.1`
+
+So here I saw something:
+
+* My docker compose created a network named `k3d-metallb_decoderleco_knet`,
+* and put my `k3d-metallb-k3d_net_plumber-1` container int hat same network
+* while what i wanted is that my container ends up attached to the `decoderleco_knet` docker network.
+
+To fix that, I ran :
+
+```bash
+docker inspect k3d-k8-lab-server-0 -f "{{json .NetworkSettings.Networks }}" | jq .
+docker inspect k3d-k8-lab-agent-0 -f "{{json .NetworkSettings.Networks }}" | jq .
+docker inspect k3d-metallb-k3d_net_plumber-1 -f "{{json .NetworkSettings.Networks }}" | jq .
+
+docker network connect decoderleco_knet k3d-metallb-k3d_net_plumber-1
+```
+
+And I run again my test commands:
+
+```bash
+export K3D_NET_NAME="decoderleco_knet"
+
+docker inspect k3d-k8-lab-server-0 -f "{{json .NetworkSettings.Networks }}" | jq .
+docker inspect k3d-k8-lab-agent-0 -f "{{json .NetworkSettings.Networks }}" | jq .
+docker inspect k3d-metallb-k3d_net_plumber-1 -f "{{json .NetworkSettings.Networks }}" | jq .${K3D_NET_NAME}
+
+export K3D_SERVER_IPADDR=$(docker inspect k3d-k8-lab-server-0 -f "{{json .NetworkSettings.Networks.${K3D_NET_NAME}.IPAddress }}" | awk -F '"' '{print $2}')
+
+export K3D_AGENT_IPADDR=$(docker inspect k3d-k8-lab-agent-0 -f "{{json .NetworkSettings.Networks.${K3D_NET_NAME}.IPAddress }}" | awk -F '"' '{print $2}')
+
+echo "K3D_SERVER_IPADDR=[${K3D_SERVER_IPADDR}]"
+echo "K3D_AGENT_IPADDR=[${K3D_AGENT_IPADDR}]"
+
+docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ip -s link show eth0"
+docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ethtool eth0"
+docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ip neighbor show"
+docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "cat /proc/net/arp"
+
+docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ping -c 4 ${K3D_SERVER_IPADDR}"
+
+docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ping -c 4 ${K3D_AGENT_IPADDR}"
+
+
+docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ip neighbor show"
+docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "cat /proc/net/arp"
+
+```
+
+And I get now very nteresting results, showing that my truble shooter does sucessfully get ARP cache populated with MAC Adresses and IP address entries:
+
+```bash
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$ docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ip -s link show eth0"
+WARN[0000] The "K3D_NET_FIRST_ADDR" variable is not set. Defaulting to a blank string.
+WARN[0000] The "K3D_NET_RANGE" variable is not set. Defaulting to a blank string.
+WARN[0000] /home/ubuntu/packman/oracle/post_install/kubernetes/k3d-metallb/troubleshooter.yml: `version` is obsolete
+65: eth0@if66: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default
+    link/ether 02:42:ac:14:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    RX:  bytes packets errors dropped  missed   mcast
+          1618      21      0       0       0       0
+    TX:  bytes packets errors dropped carrier collsns
+           434       5      0       0       0       0
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$ docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ethtool eth0"
+WARN[0000] The "K3D_NET_FIRST_ADDR" variable is not set. Defaulting to a blank string.
+WARN[0000] The "K3D_NET_RANGE" variable is not set. Defaulting to a blank string.
+WARN[0000] /home/ubuntu/packman/oracle/post_install/kubernetes/k3d-metallb/troubleshooter.yml: `version` is obsolete
+netlink error: Operation not permitted
+Settings for eth0:
+        Supported ports: [  ]
+        Supported link modes:   Not reported
+        Supported pause frame use: No
+        Supports auto-negotiation: No
+        Supported FEC modes: Not reported
+        Advertised link modes:  Not reported
+        Advertised pause frame use: No
+        Advertised auto-negotiation: No
+        Advertised FEC modes: Not reported
+        Speed: 10000Mb/s
+        Duplex: Full
+        Auto-negotiation: off
+        Port: Twisted Pair
+        PHYAD: 0
+        Transceiver: internal
+        MDI-X: Unknown
+        Link detected: yes
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$ docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ip neighbor show"
+WARN[0000] The "K3D_NET_FIRST_ADDR" variable is not set. Defaulting to a blank string.
+WARN[0000] The "K3D_NET_RANGE" variable is not set. Defaulting to a blank string.
+WARN[0000] /home/ubuntu/packman/oracle/post_install/kubernetes/k3d-metallb/troubleshooter.yml: `version` is obsolete
+172.20.0.1 dev eth0 lladdr 02:42:29:6f:90:8d STALE
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$ docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "cat /proc/net/arp"
+WARN[0000] The "K3D_NET_FIRST_ADDR" variable is not set. Defaulting to a blank string.
+WARN[0000] The "K3D_NET_RANGE" variable is not set. Defaulting to a blank string.
+WARN[0000] /home/ubuntu/packman/oracle/post_install/kubernetes/k3d-metallb/troubleshooter.yml: `version` is obsolete
+IP address       HW type     Flags       HW address            Mask     Device
+172.20.0.1       0x1         0x2         02:42:29:6f:90:8d     *        eth0
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$ docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ping -c 4 ${K3D_SERVER_IPADDR}"
+WARN[0000] The "K3D_NET_FIRST_ADDR" variable is not set. Defaulting to a blank string.
+WARN[0000] The "K3D_NET_RANGE" variable is not set. Defaulting to a blank string.
+WARN[0000] /home/ubuntu/packman/oracle/post_install/kubernetes/k3d-metallb/troubleshooter.yml: `version` is obsolete
+PING 172.19.0.2 (172.19.0.2) 56(84) bytes of data.
+64 bytes from 172.19.0.2: icmp_seq=1 ttl=64 time=0.620 ms
+64 bytes from 172.19.0.2: icmp_seq=2 ttl=64 time=0.080 ms
+64 bytes from 172.19.0.2: icmp_seq=3 ttl=64 time=0.083 ms
+64 bytes from 172.19.0.2: icmp_seq=4 ttl=64 time=0.083 ms
+
+--- 172.19.0.2 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3075ms
+rtt min/avg/max/mdev = 0.080/0.216/0.620/0.232 ms
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$ docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ip neighbor show"
+WARN[0000] The "K3D_NET_FIRST_ADDR" variable is not set. Defaulting to a blank string.
+WARN[0000] The "K3D_NET_RANGE" variable is not set. Defaulting to a blank string.
+WARN[0000] /home/ubuntu/packman/oracle/post_install/kubernetes/k3d-metallb/troubleshooter.yml: `version` is obsolete
+172.20.0.1 dev eth0 lladdr 02:42:29:6f:90:8d STALE
+172.19.0.2 dev eth1 lladdr 02:42:ac:13:00:02 REACHABLE
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$ docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ping -c 4 ${K3D_AGENT_IPADDR}"
+WARN[0000] The "K3D_NET_FIRST_ADDR" variable is not set. Defaulting to a blank string.
+WARN[0000] The "K3D_NET_RANGE" variable is not set. Defaulting to a blank string.
+WARN[0000] /home/ubuntu/packman/oracle/post_install/kubernetes/k3d-metallb/troubleshooter.yml: `version` is obsolete
+PING 172.19.0.3 (172.19.0.3) 56(84) bytes of data.
+64 bytes from 172.19.0.3: icmp_seq=1 ttl=64 time=0.185 ms
+64 bytes from 172.19.0.3: icmp_seq=2 ttl=64 time=0.076 ms
+64 bytes from 172.19.0.3: icmp_seq=3 ttl=64 time=0.072 ms
+64 bytes from 172.19.0.3: icmp_seq=4 ttl=64 time=0.086 ms
+
+--- 172.19.0.3 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3068ms
+rtt min/avg/max/mdev = 0.072/0.104/0.185/0.046 ms
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$ docker-compose -f ./troubleshooter.yml exec -T k3d_net_plumber bash -c "ip neighbor show"
+WARN[0000] The "K3D_NET_FIRST_ADDR" variable is not set. Defaulting to a blank string.
+WARN[0000] The "K3D_NET_RANGE" variable is not set. Defaulting to a blank string.
+WARN[0000] /home/ubuntu/packman/oracle/post_install/kubernetes/k3d-metallb/troubleshooter.yml: `version` is obsolete
+172.20.0.1 dev eth0 lladdr 02:42:29:6f:90:8d STALE
+172.19.0.2 dev eth1 lladdr 02:42:ac:13:00:02 STALE
+172.19.0.3 dev eth1 lladdr 02:42:ac:13:00:03 REACHABLE
+ubuntu@myserver:~/packman/oracle/post_install/kubernetes/k3d-metallb$
+
+```
+
+But yet now, I still get this for my `nginx` deployment in my `k3d` cluster (metallb fails to allocate IPAddress to the NGINX deployed LoadBalancer):
+
+```bash
+kubectl get all
+
+kubectl get all -n metallb-system
+
+kubectl logs service/metallb-webhook-service -n metallb-system | grep 'nginx'
+
+kubectl logs deployment.apps/metallb-decoderleco-controller -n metallb-system | grep 'nginx'
+
+kubectl describe service/nginx
+
+kubectl describe cm/metallb-decoderleco-config -n metallb-system
+
+```
+
+The tests I ran with the docker-compose troubleshootershow that in my server on oracle, ARP PRotocol work perfectely fine as expected for network connectivity between docker containers.
+
+So next, I will have to run pretty much the same kind of ARP tests, from within k3d pods, which will answer to only one question, about the ARP protocol working fine for connectivity between containers within the kubernetes cluster.
+
+But I still have more questions to get an answer to:
+
+* (controller) What exactly are the network operations executed by the Metallb to assign an IP address to the NGINX `Kubernetes` `LoadBalancer` ? To answer that question, I will try and run linux commands which perform the exact same network operations.
+* (speaker) What exactly are the network operations executed by the Metallb to broadcast the IP address of the NGINX `Kubernetes` `LoadBalancer` ? To answer that question, I will try and run linux commands which perform the exact same network operations.
+
+## References
+
+* https://forums.docker.com/t/arp-cache-mac-and-docker/68985
+* I duely note that:
+  * metallb design is at least recently related to the FRRouting software (FRRouting stands for Free Range Routing), a successor of Quaggua, see https://github.com/metallb/frr-k8s and https://frrouting.org/ 
+  * metallb most used deployment method is its helm chart, but there exists a Kubernetes operator which does nt seem to have a helm chart yet (MAy 2024), see https://github.com/metallb/metallb-operator
+  * All his is really interesting, and advanced topic about kubernetes, and valuable to learn about deep kubernetes networking. Fixing my issue my lead me to completely re-implement 
+
+## ANNEX What is MetallB ?
+
+MetallB in the Kubernetes Terminology (as of may 2024) is a _**Kubernetes External Load Balancer Provider**_.
+The bzlow quote explains briefly, but very clearly actually, how kubernetes standardizes that concept of _**Kubernetes External Load Balancer Provider**_:
+
+* You implement a kubernetes controller in charge of hitting the cloud provider's api to create a Network Load Balancer.
+* The cloud provider creates that load balancer, which load balances between the kubernetes cluster nodes
+* When the clud provider has finished its work of creating that load balancer by finally assiging one or more IP addresses to the kubernetes cluster nodes, then only the Kubernetes controller grabs the value of that IP address, and assigns it to the Kubernetes Service.
+* So basically here I think Metallb here uses (FRRouting?Something else?) to create the load balancer. How to create a load baalncer using FRRouting?
+* This article gives many very useful infos on metallb insights, among which it is clear that MEtallb uses FRrouting for the BGP Mode (so I'm not for y case for the ARP case I'm working with for now) <https://www.redhat.com/en/blog/metallb-in-bgp-mode>
+
+#### External load balancer providers
+
+It is important to note that the `datapath` for this functionality is provided by a load balancer external to the Kubernetes cluster.
+
+When the Service type is set to `LoadBalancer`, Kubernetes provides functionality equivalent to type equals `ClusterIP` to pods within the cluster and extends it by programming the (external to Kubernetes) load balancer with entries for the nodes hosting the relevant Kubernetes pods. **The Kubernetes control plane automates the creation of the external load balancer**, health checks (if needed), and packet filtering rules (if needed). **Once the cloud provider allocates an IP address for the load balancer**, the control plane looks up that external IP address and populates it into the Service object.
+
+
+https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#external-load-balancer-providers

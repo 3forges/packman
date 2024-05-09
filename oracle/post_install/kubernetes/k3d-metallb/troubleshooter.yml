@@ -3,6 +3,7 @@ version: '3.7'
 services:
   k3d_net_plumber:
     image: decoderleco/k3d_net_plumber:0.0.1-alpha
+    container_name: k3d_net_plumber
     build:
       context: ./oci/k3d_net_plumber/
       dockerfile: Dockerfile
