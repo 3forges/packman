@@ -204,7 +204,7 @@ spec:
 EOF
 
 kubectl apply -f ./nginx-deployment.yaml
-kubectl delete -f ./nginx-deployment.yaml
+# kubectl delete -f ./nginx-deployment.yaml
 
 # --- 
 #
