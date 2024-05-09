@@ -22,8 +22,6 @@ services:
       - K3D_NET_FIRST_ADDR=$K3D_NET_FIRST_ADDR
       # - K3D_NET_RANGE=172.19.0.240/29
       - K3D_NET_RANGE=$K3D_NET_RANGE
-    ports:
-        - '0.0.0.0:8888:8888'
     networks:
       decoderleco_knet:
         aliases:
