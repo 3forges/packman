@@ -856,6 +856,8 @@ But I still have more questions to get an answer to:
 
 Before going that deep, I see one other test I can easily do: try and run the exact same tests but inside a simple VirtualBox VM, at home. There I wil have to tkae in consideration the fact that MEtallb ahs specific ntoes about using a wifi network.
 
+ANother thing I can try and test is to try same ut withkind instead of `k3d`: https://www.youtube.com/watch?v=43fn499NYXs
+
 ## ANNEX What is MetallB ?
 
 MetallB in the Kubernetes Terminology (as of may 2024) is a _**Kubernetes External Load Balancer Provider**_.
