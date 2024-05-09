@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ -d ./packman ]; then
+  rm -fr ./packman
+fi;
+
 # 0 - git clone the thing
 export PACKMAN_DESIRED_VERSION="feature/packer/full/appliances/lifecycle"
 git clone https://github.com/3forges/packman.git
