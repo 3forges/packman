@@ -371,7 +371,7 @@ resource "null_resource" "provision_kubernetes" {
   # ---
   #  Jupyterlab Deployment
   provisioner "file" {
-    source      = "./oracle/post_install/kubernetes/k3d-metallb/terraform.provisioner.sh"
+    source      = "./post_install/kubernetes/k3d-metallb/terraform.provisioner.sh"
     destination = "/tmp/k3d-metallb.terraform.provisioner.sh"
   }
   provisioner "remote-exec" {
