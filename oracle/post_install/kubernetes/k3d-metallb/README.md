@@ -854,7 +854,7 @@ But I still have more questions to get an answer to:
   * All his is really interesting, and advanced topic about kubernetes, and valuable to learn about deep kubernetes networking. Fixing my issue my lead me to completely re-implement 
 * I have there an idea i am keen on trying: would it be possible to implement a golang or nodejs software able to provision dynamically a load balancer by an api? If so, then I could implement a kubernetes operator or controller like above to implement my own small metallb. Would be a grat exercize to lern lots about networking and kubernetes at same time. I will then hav my own CRDs.
 
-Before going that deep, I see one other test I can easily do: try and run the exact same tests but inside a simple VirtualBox VM, at home. There I wil have to tkae in consideration the fact that 
+Before going that deep, I see one other test I can easily do: try and run the exact same tests but inside a simple VirtualBox VM, at home. There I wil have to tkae in consideration the fact that MEtallb ahs specific ntoes about using a wifi network.
 
 ## ANNEX What is MetallB ?
 
