@@ -63,9 +63,10 @@ figlet 'create kind kubernetes cluster'
 # KND_NET_NAME: the name of the docker network used by the kind cluster
 export KND_NET_NAME="decoderleco_knet"
 export KND_NET_NAME="kind"
+export KNB_CLUSTER_NAME="k8-lab-decoderleco"
 # docker network create ${KND_NET_NAME}
 
-# kind create cluster -n k8-lab-decoderleco --wait 3m
+# kind create cluster -n ${KNB_CLUSTER_NAME} --wait 3m
 
 sudo mkdir -p /etc/containerd/certs.d
 
@@ -87,7 +88,7 @@ kind delete clusters --all
 # https://github.com/kubernetes-sigs/kind/issues/2875
 # https://github.com/containerd/containerd/blob/main/docs/cri/config.md#registry-configuration
 # See: https://github.com/containerd/containerd/blob/main/docs/hosts.md
-cat <<EOF | kind create cluster -n k8-lab-decoderleco --config=-
+cat <<EOF | kind create cluster -n ${KNB_CLUSTER_NAME} --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 containerdConfigPatches:
@@ -105,7 +106,7 @@ EOF
 # We want a consistent name that works from both ends, so we tell containerd to
 # alias localhost:${reg_port} to the registry container when pulling images
 REGISTRY_DIR="/etc/containerd/certs.d/localhost:${reg_port}"
-for node in $(kind get nodes); do
+for node in $(kind get nodes -n ${KNB_CLUSTER_NAME}); do
   docker exec "${node}" mkdir -p "${REGISTRY_DIR}"
   cat <<EOF | docker exec -i "${node}" cp /dev/stdin "${REGISTRY_DIR}/hosts.toml"
 [host."http://${reg_name}:5000"]
@@ -187,7 +188,8 @@ helm install metallb metallb/metallb -n metallb-system
 
 figlet 'Metallb config'
 export KND_NET_NAME="kind"
-export KND_NET_CIDR_BLOCK=$(docker network inspect ${KND_NET_NAME} | jq '. [0].IPAM.Config[0].Subnet' | tr -d '"')
+# export KND_NET_CIDR_BLOCK=$(docker network inspect ${KND_NET_NAME} | jq '. [0].IPAM.Config[0].Subnet' | tr -d '"')
+export KND_NET_CIDR_BLOCK=$(docker network inspect ${KND_NET_NAME} | jq '. [0].IPAM.Config[1].Subnet' | tr -d '"')
 
 echo "KND_NET_CIDR_BLOCK=[${KND_NET_CIDR_BLOCK}]"
 
