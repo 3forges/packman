@@ -220,6 +220,59 @@ kubectl apply -f ./metallb-L2Advertisement.yaml
 
 
 
+# ---
+# 6./ DEPLOY NGINX TO TEST IF NGINX GETS AN EXTERNAL IP in the k3d docker network
+
+figlet 'DEPLOY NGINX'
+
+cat <<EOF >./nginx-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx  
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx  
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+  selector:
+    app: nginx
+EOF
+
+kubectl apply -f ./nginx-deployment.yaml
+# kubectl delete -f ./nginx-deployment.yaml
+
+# --- 
+#
+# with kubectk i should get something like:
+# 
+#   nginx                      LoadBalancer   10.43.223.116   172.18.0.242   80:32017/TCP                  17s
+# 
+# --- 
+# 
+
+
+
+
 exit 0
 
 
@@ -274,57 +327,6 @@ helm install -n ${METALLB_K8S_NAMESPACE} -f ./values.yaml ${HELM_MLB_RELEASE_NAM
 
 
 
-
-
-# ---
-# 6./ DEPLOY NGINX TO TEST IF NGINX GETS AN EXTERNAL IP in the k3d docker network
-
-figlet 'DEPLOY NGINX'
-
-cat <<EOF >./nginx-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx  
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - name: nginx
-        image: nginx
-        ports:
-        - containerPort: 80
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: nginx  
-spec:
-  type: LoadBalancer
-  ports:
-  - port: 80
-  selector:
-    app: nginx
-EOF
-
-kubectl apply -f ./nginx-deployment.yaml
-# kubectl delete -f ./nginx-deployment.yaml
-
-# --- 
-#
-# with kubectk i should get something like:
-# 
-#   nginx                      LoadBalancer   10.43.223.116   172.18.0.242   80:32017/TCP                  17s
-# 
-# --- 
-# 
 
 
 
