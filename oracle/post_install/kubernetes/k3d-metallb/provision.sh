@@ -177,7 +177,7 @@ export METALLB_K8S_NAMESPACE="metallb-system"
 # kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.10.3/manifests/metallb.yaml
 # kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.10.3/manifests/namespace.yaml
 # kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.10.3/manifests/metallb.yaml
-
+kubectl create ns ${METALLB_K8S_NAMESPACE}
 
 helm repo add metallb https://metallb.github.io/metallb
 helm install metallb metallb/metallb -n metallb-system
