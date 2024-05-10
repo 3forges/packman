@@ -858,6 +858,13 @@ Before going that deep, I see one other test I can easily do: try and run the ex
 
 ANother thing I can try and test is to try same ut withkind instead of `k3d`: https://www.youtube.com/watch?v=43fn499NYXs
 
+#### The kindest way
+
+what's niec is they give a very simple straight forward way to setup a privat docker registry to deploy apps in the cluster :
+
+https://kind.sigs.k8s.io/docs/user/local-registry/
+
+
 ## ANNEX What is MetallB ?
 
 MetallB in the Kubernetes Terminology (as of may 2024) is a _**Kubernetes External Load Balancer Provider**_.

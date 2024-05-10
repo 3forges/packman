@@ -1,4 +1,5 @@
 #!/bin/bash
+set -o errexit
 
 sudo mkdir -p /usr/local/bin/
 
@@ -13,12 +14,12 @@ curl -sLS https://get.arkade.dev | sudo sh
 arkade version
 
 
-# 2./ Install k3d
+# 2./ Install kind
 
-figlet 'Install k3d'
-arkade get k3d
+figlet 'Install kind'
+arkade get kind
 
-sudo mv ${HOME}/.arkade/bin/k3d /usr/local/bin/
+sudo mv ${HOME}/.arkade/bin/kind /usr/local/bin/
 
 
 # 2./ Install kubectl and helm
@@ -41,18 +42,115 @@ sudo mv ${HOME}/.arkade/bin/helm /usr/local/bin/
 helm version
 # version.BuildInfo{Version:"v3.14.4", GitCommit:"81c902a123462fd4052bc5e9aa9c513c4c8fc142", GitTreeState:"clean", GoVersion:"go1.21.9"}
 
-# 4./ create k3d kubernetes cluster
+# 4./ create kind kubernetes cluster, with a local docker registry
 
-figlet 'create k3d kubernetes cluster'
+figlet 'create kind kubernetes cluster'
 # ---
-# K3D_NET_NAME: the name of the docker network used by the k3d cluster
-export K3D_NET_NAME="decoderleco_knet"
-docker network create ${K3D_NET_NAME}
+# KND_NET_NAME: the name of the docker network used by the kind cluster
+export KND_NET_NAME="decoderleco_knet"
+docker network create ${KND_NET_NAME}
 
-k3d cluster create k8-lab --network "${K3D_NET_NAME}" --api-port 6550 --agents 1 --k3s-arg "--disable=traefik@server:0" --k3s-arg "--disable=servicelb@server:0" --no-lb --wait
+# kind create cluster -n k8-lab-decoderleco --wait 3m
 
+sudo mkdir -p /etc/containerd/certs.d
+
+# 1. Create registry container unless it already exists
+reg_name='kind-registry'
+reg_port='5001'
+if [ "$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true)" != 'true' ]; then
+  docker run \
+    -d --restart=always -p "127.0.0.1:${reg_port}:5000" --network bridge --name "${reg_name}" \
+    registry:2
+fi
+
+# 2. Create kind cluster with containerd registry config dir enabled
+# TODO: kind will eventually enable this by default and this patch will
+# be unnecessary.
+#
+# See:
+# https://github.com/kubernetes-sigs/kind/issues/2875
+# https://github.com/containerd/containerd/blob/main/docs/cri/config.md#registry-configuration
+# See: https://github.com/containerd/containerd/blob/main/docs/hosts.md
+cat <<EOF | kind create cluster -n k8-lab-decoderleco --config=-
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+containerdConfigPatches:
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry]
+    config_path = "/etc/containerd/certs.d"
+EOF
+
+# 3. Add the registry config to the nodes
+#
+# This is necessary because localhost resolves to loopback addresses that are
+# network-namespace local.
+# In other words: localhost in the container is not localhost on the host.
+#
+# We want a consistent name that works from both ends, so we tell containerd to
+# alias localhost:${reg_port} to the registry container when pulling images
+REGISTRY_DIR="/etc/containerd/certs.d/localhost:${reg_port}"
+for node in $(kind get nodes); do
+  docker exec "${node}" mkdir -p "${REGISTRY_DIR}"
+  cat <<EOF | docker exec -i "${node}" cp /dev/stdin "${REGISTRY_DIR}/hosts.toml"
+[host."http://${reg_name}:5000"]
+EOF
+done
+
+# 4. Connect the registry to the cluster network if not already connected
+# This allows kind to bootstrap the network but ensures they're on the same network
+if [ "$(docker inspect -f='{{json .NetworkSettings.Networks.kind}}' "${reg_name}")" = 'null' ]; then
+  docker network connect "kind" "${reg_name}"
+fi
+
+# 5. Document the local registry
+# https://github.com/kubernetes/enhancements/tree/master/keps/sig-cluster-lifecycle/generic/1755-communicating-a-local-registry
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: local-registry-hosting
+  namespace: kube-public
+data:
+  localRegistryHosting.v1: |
+    host: "localhost:${reg_port}"
+    help: "https://kind.sigs.k8s.io/docs/user/local-registry/"
+EOF
 
 kubectl cluster-info
+
+figlet 'Test cluster + registry'
+
+docker pull gcr.io/google-samples/hello-app:1.0
+
+docker tag gcr.io/google-samples/hello-app:1.0 localhost:5001/hello-app:1.0
+
+docker push localhost:5001/hello-app:1.0
+
+kubectl create deployment hello-server --image=localhost:5001/hello-app:1.0
+
+
+kubectl get all
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # 5./ deploy metallb
 
@@ -65,51 +163,64 @@ export METALLB_K8S_NAMESPACE="metallb-system"
 # kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.10.3/manifests/metallb.yaml
 
 
-figlet 'get helm chart'
+helm repo add metallb https://metallb.github.io/metallb
+helm install metallb metallb/metallb
 
-## 5.a) Get the Bitnami helm Chart and set the Metallb desired configuration directly into the [./templates/controller/configmap.yaml] Helm template file
 
-# https://github.com/bitnami/charts/tree/main/bitnami/metallb/#installing-the-chart
-
-# git clone https://github.com/bitnami/charts ./bitnamischarts
-export DESIRED_VERSION=136846926733d172c3d52646e1576188839a063e
-export DESIRED_BRANCH=main
-export BITNAMI_CHARTS_REPO_URL=https://github.com/bitnami/charts
-git clone -b ${DESIRED_BRANCH} --depth 1  --single-branch ${BITNAMI_CHARTS_REPO_URL} ./bitnamischarts
-
-cd ./bitnamischarts
-
-git checkout ${DESIRED_VERSION} || true
-# The version i tested which shouldbe desired:
-# $ git rev-parse --short=40 HEAD
-# 136846926733d172c3d52646e1576188839a063e
-
-cd bitnami/metallb
 
 
 figlet 'Metallb config'
+export KND_NET_NAME="kind"
+export KND_NET_CIDR_BLOCK=$(docker network inspect ${KND_NET_NAME} | jq '. [0].IPAM.Config[0].Subnet' | tr -d '"')
 
-export K3D_NET_CIDR_BLOCK=$(docker network inspect ${K3D_NET_NAME} | jq '. [0].IPAM.Config[0].Subnet' | tr -d '"')
+echo "KND_NET_CIDR_BLOCK=[${KND_NET_CIDR_BLOCK}]"
 
-echo "K3D_NET_CIDR_BLOCK=[${K3D_NET_CIDR_BLOCK}]"
+export KND_NET_BASE_ADDR=${KND_NET_CIDR_BLOCK%???}
 
-export K3D_NET_BASE_ADDR=${K3D_NET_CIDR_BLOCK%???}
+export KND_NET_FIRST_ADDR=$(echo $KND_NET_CIDR_BLOCK | awk -F'.' '{print $1,$2,$3,240}' OFS='.')
 
-export K3D_NET_FIRST_ADDR=$(echo $K3D_NET_CIDR_BLOCK | awk -F'.' '{print $1,$2,$3,240}' OFS='.')
-
-export K3D_NET_RANGE="$K3D_NET_FIRST_ADDR/29"
+export KND_NET_RANGE="$KND_NET_FIRST_ADDR/29"
 
 
-echo "K3D_NET_BASE_ADDR=[${K3D_NET_BASE_ADDR}]"
-echo "K3D_NET_FIRST_ADDR=[${K3D_NET_FIRST_ADDR}]"
-echo "K3D_NET_RANGE=[${K3D_NET_RANGE}]"
+echo "KND_NET_BASE_ADDR=[${KND_NET_BASE_ADDR}]"
+echo "KND_NET_FIRST_ADDR=[${KND_NET_FIRST_ADDR}]"
+echo "KND_NET_RANGE=[${KND_NET_RANGE}]"
 
 # e.g. output :
-#  K3D_NET_CIDR_BLOCK=[172.19.0.0/16]
-#  K3D_NET_BASE_ADDR=[172.19.0.0]
-#  K3D_NET_FIRST_ADDR=[172.19.0.240]
-#  K3D_NET_RANGE=[172.19.0.240/29]
+#  KND_NET_CIDR_BLOCK=[172.19.0.0/16]
+#  KND_NET_BASE_ADDR=[172.19.0.0]
+#  KND_NET_FIRST_ADDR=[172.19.0.240]
+#  KND_NET_RANGE=[172.19.0.240/29]
+export METALLB_ADDR_POOL_NAME="decoderleco-pool"
+cat <<EOF >./metallb-address-pool.yaml
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: ${METALLB_ADDR_POOL_NAME}
+  namespace: metallb-system
+spec:
+  addresses:
+  - $KND_NET_RANGE
+EOF
 
+kubectl apply -f ./metallb-address-pool.yaml
+
+
+cat <<EOF >./metallb-L2Advertisement.yaml
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: decoderleco
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - ${METALLB_ADDR_POOL_NAME}
+EOF
+kubectl apply -f ./metallb-L2Advertisement.yaml
+
+
+
+exit 0
 
 
 ls -alh ./templates/controller/configmap.yaml
@@ -135,7 +246,7 @@ data:
     - name: default
       protocol: layer2
       addresses:
-      - $K3D_NET_RANGE
+      - $KND_NET_RANGE
 {{- end -}}
 EOF
 
@@ -243,7 +354,7 @@ data:
     - name: default
       protocol: layer2
       addresses:
-      - $K3D_NET_RANGE
+      - $KND_NET_RANGE
 EOF
 # kubectl delete cm/${HELM_MLB_RELEASE_NAME}-config -n ${METALLB_K8S_NAMESPACE}
 
