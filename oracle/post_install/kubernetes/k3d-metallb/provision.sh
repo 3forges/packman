@@ -101,7 +101,6 @@ containerdConfigPatches:
 nodes:
 - role: control-plane
 - role: control-plane
-- role: control-plane
 - role: worker
 - role: worker
 - role: worker
