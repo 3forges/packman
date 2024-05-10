@@ -139,15 +139,34 @@ EOF
 kubectl cluster-info
 
 figlet 'Test cluster + registry'
+docker pull arm64v8/hello-world
+# docker pull gcr.io/google-samples/hello-app:1.0
+# ubuntu@myserver:~$ docker pull --platform linux/arm64 nginx
+# Using default tag: latest
+# latest: Pulling from library/nginx
+# 22d97f6a5d13: Already exists
+# a68473e9d216: Pull complete
+# 7c0a9e5032ac: Pull complete
+# 43f7d7c8e1e1: Pull complete
+# a23342af148c: Pull complete
+# 18b7abeaeadc: Pull complete
+# 568b5ecc128d: Pull complete
+# Digest: sha256:32e76d4f34f80e479964a0fbd4c5b4f6967b5322c8d004e9cf0cb81c93510766
+# Status: Downloaded newer image for nginx:latest
+# docker.io/library/nginx:latest
+# ubuntu@myserver:~$ docker pull --platform linux/arm64 gcr.io/google-samples/hello-app:1.0
+# 1.0: Pulling from google-samples/hello-app
+# Digest: sha256:b1455e1c4fcc5ea1023c9e3b584cd84b64eb920e332feff690a2829696e379e7
+# Status: Image is up to date for gcr.io/google-samples/hello-app:1.0
+# image with reference gcr.io/google-samples/hello-app:1.0 was found but does not match the specified platform: wanted linux/arm64, actual: linux/amd64
 
-docker pull gcr.io/google-samples/hello-app:1.0
 
-docker tag gcr.io/google-samples/hello-app:1.0 localhost:5001/hello-app:1.0
 
-docker push localhost:5001/hello-app:1.0
+docker tag arm64v8/hello-world localhost:5001/arm64v8/hello-world:0.1
 
-kubectl create deployment hello-server --image=localhost:5001/hello-app:1.0
+docker push localhost:5001/arm64v8/hello-world:0.1
 
+kubectl create deployment hello-server --image=localhost:5001/arm64v8/hello-world:0.1
 
 kubectl get all
 
