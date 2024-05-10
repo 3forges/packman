@@ -48,7 +48,8 @@ figlet 'create kind kubernetes cluster'
 # ---
 # KND_NET_NAME: the name of the docker network used by the kind cluster
 export KND_NET_NAME="decoderleco_knet"
-docker network create ${KND_NET_NAME}
+export KND_NET_NAME="kind"
+# docker network create ${KND_NET_NAME}
 
 # kind create cluster -n k8-lab-decoderleco --wait 3m
 

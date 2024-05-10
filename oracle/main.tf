@@ -372,12 +372,12 @@ resource "null_resource" "provision_kubernetes" {
   #  Jupyterlab Deployment
   provisioner "file" {
     source      = "./post_install/kubernetes/k3d-metallb/terraform.provisioner.sh"
-    destination = "/tmp/k3d-metallb.terraform.provisioner.sh"
+    destination = "/tmp/kind-metallb.terraform.provisioner.sh"
   }
   provisioner "remote-exec" {
     inline = [
-      "chmod +x /tmp/k3d-metallb.terraform.provisioner.sh",
-      "/tmp/k3d-metallb.terraform.provisioner.sh",
+      "chmod +x /tmp/kind-metallb.terraform.provisioner.sh",
+      "/tmp/kind-metallb.terraform.provisioner.sh"
     ]
   }
   depends_on = [
