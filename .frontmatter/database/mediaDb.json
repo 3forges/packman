@@ -1,1 +1,1 @@
-{"users":{"utilisateur":{"packman":{"terraform_from_new_box":{"docs":{"images":{}}}}}}}
+{"users":{"utilisateur":{"packman":{"terraform_from_new_box":{"docs":{"images":{}}},"oracle":{"post_install":{"kubernetes":{"k3d-metallb":{"docs":{}}}}}}}}}
