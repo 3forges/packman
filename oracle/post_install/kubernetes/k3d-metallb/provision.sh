@@ -104,8 +104,6 @@ nodes:
 - role: worker
 - role: worker
 - role: worker
-- role: worker
-- role: worker
 EOF
 
 # Then we wait a bit to let the cluster get up'n running cosily
