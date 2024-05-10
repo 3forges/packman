@@ -100,12 +100,6 @@ containerdConfigPatches:
     config_path = "/etc/containerd/certs.d"
 nodes:
 - role: control-plane
-- role: control-plane
-- role: control-plane
-- role: worker
-- role: worker
-- role: worker
-- role: worker
 - role: worker
 - role: worker
 - role: worker
