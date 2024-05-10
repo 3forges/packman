@@ -17,27 +17,41 @@ arkade version
 # 2./ Install kind
 
 figlet 'Install kind'
-arkade get kind
 
-sudo mv ${HOME}/.arkade/bin/kind /usr/local/bin/
 
+if ! [ -f /usr/local/bin/kind ]; then
+  arkade get kind
+  sudo mv ${HOME}/.arkade/bin/kind /usr/local/bin/
+else
+  figlet 'king already installed'
+fi;
+
+kind version
 
 # 2./ Install kubectl and helm
 
 figlet 'Install kubectl'
 
-arkade get kubectl
+if ! [ -f /usr/local/bin/kind ]; then
+  arkade get kubectl
+  sudo mv ${HOME}/.arkade/bin/kubectl /usr/local/bin/
+else
+  figlet 'kubectl already installed'
+fi;
 
-sudo mv ${HOME}/.arkade/bin/kubectl /usr/local/bin/
 
 kubectl version --client
 
 
 figlet 'Install helm'
 
-arkade get helm
+if ! [ -f /usr/local/bin/helm ]; then
+  arkade get helm
+  sudo mv ${HOME}/.arkade/bin/helm /usr/local/bin/
+else
+  figlet 'helm already installed'
+fi;
 
-sudo mv ${HOME}/.arkade/bin/helm /usr/local/bin/
 
 helm version
 # version.BuildInfo{Version:"v3.14.4", GitCommit:"81c902a123462fd4052bc5e9aa9c513c4c8fc142", GitTreeState:"clean", GoVersion:"go1.21.9"}
