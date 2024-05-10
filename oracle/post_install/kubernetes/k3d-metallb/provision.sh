@@ -100,12 +100,19 @@ containerdConfigPatches:
     config_path = "/etc/containerd/certs.d"
 nodes:
 - role: control-plane
+- role: control-plane
+- role: control-plane
+- role: worker
+- role: worker
 - role: worker
 - role: worker
 - role: worker
 EOF
 
+# Then we wait a bit to let the cluster get up'n running cosily
+sleep 60s
 
+kubectl cluster-info
 
 
 
@@ -160,7 +167,7 @@ data:
     help: "https://kind.sigs.k8s.io/docs/user/local-registry/"
 EOF
 
-kubectl cluster-info
+
 
 figlet 'Test cluster + registry'
 docker pull arm64v8/hello-world
@@ -230,7 +237,8 @@ helm repo add metallb https://metallb.github.io/metallb
 helm install metallb metallb/metallb -n metallb-system
 
 
-
+# Then we wait something like 1 or 2 minutes to let the Metallb deployment get up n running cosily, because of issues like https://github.com/metallb/metallb/issues/1540
+sleep 120s
 
 figlet 'Metallb config'
 export KND_NET_NAME="kind"
