@@ -23,7 +23,8 @@ if ! [ -f /usr/local/bin/kind ]; then
   arkade get kind
   sudo mv ${HOME}/.arkade/bin/kind /usr/local/bin/
 else
-  figlet 'king already installed'
+  figlet 'kind already installed'
+  ls -alh /usr/local/bin/kind
 fi;
 
 kind version
@@ -32,11 +33,12 @@ kind version
 
 figlet 'Install kubectl'
 
-if ! [ -f /usr/local/bin/kind ]; then
+if ! [ -f /usr/local/bin/kubectl ]; then
   arkade get kubectl
   sudo mv ${HOME}/.arkade/bin/kubectl /usr/local/bin/
 else
   figlet 'kubectl already installed'
+  ls -alh /usr/local/bin/kubectl
 fi;
 
 
@@ -50,6 +52,7 @@ if ! [ -f /usr/local/bin/helm ]; then
   sudo mv ${HOME}/.arkade/bin/helm /usr/local/bin/
 else
   figlet 'helm already installed'
+  ls -alh /usr/local/bin/helm
 fi;
 
 
