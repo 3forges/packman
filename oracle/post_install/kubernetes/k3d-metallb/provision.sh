@@ -91,7 +91,7 @@ kind delete clusters --all
 # https://github.com/kubernetes-sigs/kind/issues/2875
 # https://github.com/containerd/containerd/blob/main/docs/cri/config.md#registry-configuration
 # See: https://github.com/containerd/containerd/blob/main/docs/hosts.md
-cat <<EOF | kind create cluster -n ${KNB_CLUSTER_NAME} --config=-
+cat <<EOF | kind create cluster -n ${KNB_CLUSTER_NAME} --wait 15m --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 containerdConfigPatches:
@@ -101,6 +101,7 @@ containerdConfigPatches:
 nodes:
 - role: control-plane
 - role: control-plane
+- role: worker
 - role: worker
 - role: worker
 - role: worker
