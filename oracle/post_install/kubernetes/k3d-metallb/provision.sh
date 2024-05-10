@@ -303,7 +303,7 @@ kubectl apply -f ./nginx-deployment.yaml
 
 # --- 
 #
-# with kubectk i should get something like:
+# with kubectl get all i should get something like:
 # 
 #   nginx                      LoadBalancer   10.43.223.116   172.18.0.242   80:32017/TCP                  17s
 # 
