@@ -164,7 +164,7 @@ export METALLB_K8S_NAMESPACE="metallb-system"
 
 
 helm repo add metallb https://metallb.github.io/metallb
-helm install metallb metallb/metallb
+helm install metallb metallb/metallb -n metallb-system
 
 
 
