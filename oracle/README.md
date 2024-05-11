@@ -32,6 +32,18 @@ terraform apply "my.first.destroy.powershell.plan.tfplan"
 terraform plan -destroy -out="my.first.destroy.powershell.plan.tfplan"; terraform apply "my.first.destroy.powershell.plan.tfplan"
 ```
 
+* To re-run only the kubernetes part:
+
+```bash
+# Just destroy the kubernetes provisioning null_resource
+terraform destroy -target null_resource.provision_kubernetes
+
+# and then terraform plan and apply again
+terraform plan -out="my.first.powershell.plan.tfplan"
+terraform apply -auto-approve "my.first.powershell.plan.tfplan"
+
+```
+
 ## Before installing Docker: IP tables
 
 For now, I think the Ingress Rules I setup are good, as far as I understand, and for minio web app access on `9001` port.
