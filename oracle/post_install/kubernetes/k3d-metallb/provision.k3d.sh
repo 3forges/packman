@@ -65,7 +65,7 @@ helm version
 # K3D_NET_NAME: the name of the docker network 
 # used by the k3d cluster.
 export K3D_NET_NAME="decoderleco_knet"
-docker network create ${K3D_NET_NAME}
+docker network create ${K3D_NET_NAME} || true
 
 sudo mkdir -p /etc/containerd/certs.d
 
