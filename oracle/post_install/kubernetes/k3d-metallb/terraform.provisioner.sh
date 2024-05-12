@@ -12,8 +12,12 @@ git checkout ${PACKMAN_DESIRED_VERSION}
 
 cd ./oracle/post_install/kubernetes/k3d-metallb/
 
-chmod +x *.sh
+chmod +x ./*.sh
+chmod +x ./*.k3d.sh
 
-./provision.sh
+# ./provision.sh
+./provision.k3d.sh
 
-./troubleshoot.sh
+# ./troubleshoot.sh
+
+./troubleshoot.k3d.sh

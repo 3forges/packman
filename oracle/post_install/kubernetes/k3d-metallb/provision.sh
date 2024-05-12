@@ -103,7 +103,7 @@ nodes:
 - role: control-plane
 - role: worker
 - role: worker
-- role: worker
+# - role: worker
 EOF
 
 # Then we wait a bit to let the cluster get up'n running cosily
@@ -232,6 +232,7 @@ kubectl create ns ${METALLB_K8S_NAMESPACE}
 
 helm repo add metallb https://metallb.github.io/metallb
 helm install metallb metallb/metallb -n metallb-system
+# helm delete metallb -n metallb-system
 
 
 # Then we wait something like 1 or 2 minutes to let the Metallb deployment get up n running cosily, because of issues like https://github.com/metallb/metallb/issues/1540
