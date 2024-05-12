@@ -147,7 +147,9 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: juicefs-jupyterhub-secret
+  # name: juicefs-secret
   namespace: ${JUPYTERHUB_K8S_NS}
+  # namespace: default
 type: Opaque
 stringData:
   name: juicefs-jupyterhub-vol     # The JuiceFS file system name
@@ -167,10 +169,10 @@ metadata:
   namespace: ${JUPYTERHUB_K8S_NS}
 provisioner: csi.juicefs.com
 parameters:
-  csi.storage.k8s.io/provisioner-secret-name: juicefs-secret
-  csi.storage.k8s.io/provisioner-secret-namespace: default
-  csi.storage.k8s.io/node-publish-secret-name: juicefs-secret
-  csi.storage.k8s.io/node-publish-secret-namespace: default
+  csi.storage.k8s.io/provisioner-secret-name: juicefs-jupyterhub-secret
+  csi.storage.k8s.io/provisioner-secret-namespace: ${JUPYTERHUB_K8S_NS}
+  csi.storage.k8s.io/node-publish-secret-name: juicefs-jupyterhub-secret
+  csi.storage.k8s.io/node-publish-secret-namespace: ${JUPYTERHUB_K8S_NS}
 EOF
 
 kubectl apply -f ./juicefs_jupyterhub_storage_class.yaml
@@ -182,7 +184,7 @@ singleuser:
     dynamic:
       storageClass: juicefs-jupyterhub
 EOF
-
+# helm delete decoderleco-jupyter -n decoderleco
 helm upgrade --cleanup-on-fail \
   --install decoderleco-jupyter jupyterhub/jupyterhub \
   --namespace decoderleco \
@@ -221,3 +223,117 @@ EOF
 Ok, so just doing what i did above didnt work but well on worst case I think if i create 2 different filesystems and 2 juicefs mount point it should work , here its the multiple applicatipns requiring pvc with same storage class or different storage classes we'll see.
 
 it still is awesome and we'll see about how to manage several users
+
+
+
+
+```bash
+
+
+
+export minio_container_name="minio"
+# docker network connect "kind" "${minio_container_name}"
+export MINIO_BUCKET_URL="http://${minio_container_name}:9000/juicefs"
+export MINIO_ACCESS_KEY="f3LZ9oci8OkyVc6eHmyw"
+export MINIO_SECRET_KEY="ay8oI3CHTjGRtw1t1ytVlfa4XkJs0VaNwRo5d2VW"
+
+export JUICEFS_METADATA_URL="sqlite3://myjfs.db"
+
+export JUPYTERHUB_K8S_NS="decoderleco"
+figlet 'JuiceFS Test'
+cat <<EOF >./juicefs_jupyterhub_storage_class.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: juicefs-secret
+  namespace: default
+type: Opaque
+stringData:
+  name: juicefs-jupyterhub-vol     # The JuiceFS file system name
+  access-key: ${MINIO_ACCESS_KEY}  # Object storage credentials
+  secret-key: ${MINIO_SECRET_KEY}  # Object storage credentials
+  # follows are for JuiceFS enterprise
+  # token: ${JUICEFS_TOKEN}        # Token used to authenticate against JuiceFS Volume
+  # follows are for JuiceFS community
+  metaurl: ${JUICEFS_METADATA_URL} # Connection URL for metadata engine.
+  storage: s3                      # Object storage type, such as s3, gs, oss.
+  bucket: ${MINIO_BUCKET_URL}      # Bucket URL of object storage.
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: juicefs-jupyterhub
+provisioner: csi.juicefs.com
+parameters:
+  csi.storage.k8s.io/provisioner-secret-name: juicefs-secret
+  csi.storage.k8s.io/provisioner-secret-namespace: default
+  csi.storage.k8s.io/node-publish-secret-name: juicefs-secret
+  csi.storage.k8s.io/node-publish-secret-namespace: default
+EOF
+
+kubectl apply -f ./juicefs_jupyterhub_storage_class.yaml
+
+cat <<EOF >./config.yaml
+singleuser:
+  storage:
+    capacity: 2Gi
+    dynamic:
+      storageClass: juicefs-jupyterhub
+EOF
+# helm delete decoderleco-jupyter -n decoderleco
+helm upgrade --cleanup-on-fail \
+  --install decoderleco-jupyter jupyterhub/jupyterhub \
+  --namespace decoderleco \
+  --create-namespace \
+  --version=3.3.7 \
+  --values config.yaml
+
+# below that would be an example PVC using
+# the above defined storage class:
+
+cat <<EOF >./example-pvc.yaml
+# DONT APPLY THIS PVC
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: juicefs-test-pvc
+  namespace: default
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 100
+      # storage: 10Pi
+  storageClassName: juicefs-jupyterhub
+EOF
+
+
+
+
+
+
+```
+
+
+and with the above config it IT WOOORKKSSSS
+
+ where is the notebook saved ? 
+* in the minio bucket in one chunk file i found some json metadata about the notebook: 
+
+```
+{"data":{"layout-restorer:data":{"main":{"dock":{"type":"tab-area","currentIndex":1,"widgets":["notebook:premier_notebook_de_pierre.ipynb"]},"current":"notebook:premier_notebook_de_pierre.ipynb"},"down":{"size":0,"widgets":[]},"left":{"collapsed":false,"visible":true,"current":"filebrowser","widgets":["filebrowser","running-sessions","@jupyterlab/toc:plugin","extensionmanager.main-view"],"widgetStates":{"jp-running-sessions":{"sizes":[0.25,0.25,0.25,0.25],"expansionStates":[false,false,false,false]},"extensionmanager.main-view":{"sizes":[0.3333333333333333,0.3333333333333333,0.3333333333333333],"expansionStates":[false,false,false]}}},"right":{"collapsed":true,"visible":true,"widgets":["jp-property-inspector","debugger-sidebar"],"widgetStates":{"jp-debugger-sidebar":{"sizes":[0.2,0.2,0.2,0.2,0.2],"expansionStates":[false,false,false,false,false]}}},"relativeSizes":[0.1353211009174312,0.8646788990825688,0],"top":{"simpleVisibility":true}},"notebook:premier_notebook_de_pierre.ipynb":{"data":{"path":"premier_notebook_de_pierre.ipynb","factory":"Notebook"}}},"metadata":{"id":"default"}}
+```
+
+* and on filesystem mounted by juicefs outside cluster : 
+
+```bash
+ls -alh /juicefs_data/disk
+# i don't find no files here ! ...
+```
+
+Very important too: Ok this time it works, but if i try login in with a second user who is going to spin up another pod, and use same juicefs storage class... It crashes:
+
+![crash 2 users same juicefs storage class](./images/first_jupyterhub_with_juicefs_first_success_second_user_crashes_using_same_storage_class.PNG)
+
