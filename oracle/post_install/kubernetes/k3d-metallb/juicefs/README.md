@@ -337,3 +337,16 @@ Very important too: Ok this time it works, but if i try login in with a second u
 
 ![crash 2 users same juicefs storage class](./images/first_jupyterhub_with_juicefs_first_success_second_user_crashes_using_same_storage_class.PNG)
 
+about that i found : 
+
+* https://github.com/juicedata/juicefs-csi-driver/issues/405
+* https://juicefs.com/docs/csi/guide/resource-optimization/#share-mount-pod-for-the-same-storageclass
+
+
+I quickly only executed :
+
+```bash
+kubectl -n kube-system set env -c juicefs-plugin daemonset/juicefs-csi-node STORAGE_CLASS_SHARE_MOUNT=true
+```
+
+but It didnt work, i might have to change my values in `config.yaml` it obviously mentions for single user ... might vhave to do like https://github.com/juicedata/juicefs-csi-driver/issues/405
