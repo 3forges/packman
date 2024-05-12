@@ -98,8 +98,8 @@ docker run \
 # for node in $(kind get nodes -n ${KNB_CLUSTER_NAME}); do
 #   docker exec "${node}" mkdir -p "${REGISTRY_DIR}"
 #   cat <<EOF | docker exec -i "${node}" cp /dev/stdin "${REGISTRY_DIR}/hosts.toml"
-# [host."http://${reg_name}:5000"]
-# EOF
+#   [host."http://${reg_name}:5000"]
+#   EOF
 # done
 
 # 3.c.-  Connect the registry to the cluster network if not already connected
