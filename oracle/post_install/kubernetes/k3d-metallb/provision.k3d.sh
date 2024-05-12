@@ -76,6 +76,8 @@ docker stop ${reg_name} || true
 docker rm ${reg_name} || true
 reg_name='k3d-registry'
 reg_port='5001'
+docker stop ${reg_name} || true
+docker rm ${reg_name} || true
 if [ "$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true)" != 'true' ]; then
   docker run \
     -d --restart=always -p "127.0.0.1:${reg_port}:5000" --network bridge --name "${reg_name}" \
@@ -100,7 +102,7 @@ fi
 
 # 3.c.-  Connect the registry to the cluster network if not already connected
 # This allows kind to bootstrap the network but ensures they're on the same network
-if [ "$(docker inspect -f=\"{{json .NetworkSettings.Networks.$K3D_NET_NAME}}\" "${reg_name}")" = 'null' ]; then
+if [ "$(docker inspect -f='{{json .NetworkSettings.Networks.decoderleco_knet}}' "${reg_name}")" = 'null' ]; then
   docker network connect "${K3D_NET_NAME}" "${reg_name}"
 fi
 
@@ -123,8 +125,8 @@ export K3D_CLUSTER_NAME="k8-lab-decoderleco"
 k3d cluster delete ${K3D_CLUSTER_NAME} || true
 # k3d cluster delete --all || true
 
-# k3d cluster create ${K3D_CLUSTER_NAME} --registry-config ./local-registry-config.yaml --network "${K3D_NET_NAME}" --api-port 6550 --agents 1 --k3s-arg "--disable=traefik@server:0" --k3s-arg "--disable=servicelb@server:0" --no-lb --wait
-k3d cluster create ${K3D_CLUSTER_NAME} --network "${K3D_NET_NAME}" --api-port 6550 --agents 1 --k3s-arg "--disable=traefik@server:0" --k3s-arg "--disable=servicelb@server:0" --no-lb --wait
+k3d cluster create ${K3D_CLUSTER_NAME} --registry-config ./local-registry-config.yaml --network "${K3D_NET_NAME}" --api-port 6550 --agents 1 --k3s-arg "--disable=traefik@server:0" --k3s-arg "--disable=servicelb@server:0" --no-lb --wait
+# k3d cluster create ${K3D_CLUSTER_NAME} --network "${K3D_NET_NAME}" --api-port 6550 --agents 1 --k3s-arg "--disable=traefik@server:0" --k3s-arg "--disable=servicelb@server:0" --no-lb --wait
 
 kubectl cluster-info
 
