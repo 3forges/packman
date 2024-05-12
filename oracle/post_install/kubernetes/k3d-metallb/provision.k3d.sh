@@ -118,10 +118,12 @@ EOF
 # 4.a./ create k3d kubernetes cluster
 
 figlet 'create k3d kubernetes cluster'
+export K3D_CLUSTER_NAME="k8-lab-decoderleco"
 
+k3d cluster delete ${K3D_CLUSTER_NAME} || true
+# k3d cluster delete --all || true
 
-
-k3d cluster create k8-lab --registry-config ./local-registry-config.yaml --network "${K3D_NET_NAME}" --api-port 6550 --agents 1 --k3s-arg "--disable=traefik@server:0" --k3s-arg "--disable=servicelb@server:0" --no-lb --wait
+k3d cluster create ${K3D_CLUSTER_NAME} --registry-config ./local-registry-config.yaml --network "${K3D_NET_NAME}" --api-port 6550 --agents 1 --k3s-arg "--disable=traefik@server:0" --k3s-arg "--disable=servicelb@server:0" --no-lb --wait
 
 sleep 60s
 
