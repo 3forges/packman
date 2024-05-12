@@ -360,3 +360,14 @@ see also :
 
 
 I think th eproblem is not so easy to solve: how to use one and only one juicefs storage class for several apps
+
+
+maybe there would be a workaround:
+* in juicefs i know they say somewhere you can specify a variable valued subpath like with the PVC name and PV name
+* and it may work with this jupyterhub helm chart config value : https://z2jh.jupyter.org/en/stable/resources/reference.html#hub-db-pvc-subpath
+
+
+or the only alternative i see is to use the juicefs client:
+* I develop a kubernetes csi driver
+* everytime a PVC is made, one new juicefs filesystem is formatted and mounted to a different sub folder of a given folder on my VM.
+* its all i can see immediately: problem is i don't see how scallable that is over a network will it be accessible ? no its not making sense, its a whole new server i would have to implement adding on top of all things. I need to learn how to do better with this one csi driver or with another simpler like the NFS. NFS is next step for sure, before going any further.
