@@ -102,9 +102,10 @@ fi
 
 # 3.c.-  Connect the registry to the cluster network if not already connected
 # This allows kind to bootstrap the network but ensures they're on the same network
-if [ "$(docker inspect -f='{{json .NetworkSettings.Networks.decoderleco_knet}}' "${reg_name}")" = 'null' ]; then
-  docker network connect "${K3D_NET_NAME}" "${reg_name}"
-fi
+# if [ "$(docker inspect -f='{{json .NetworkSettings.Networks.decoderleco_knet}}' "${reg_name}")" = 'null' ]; then
+#   docker network connect "${K3D_NET_NAME}" "${reg_name}"
+# fi
+docker network connect "${K3D_NET_NAME}" "${reg_name}" || true
 
 
 
