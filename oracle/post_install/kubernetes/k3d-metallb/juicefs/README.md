@@ -350,3 +350,13 @@ kubectl -n kube-system set env -c juicefs-plugin daemonset/juicefs-csi-node STOR
 ```
 
 but It didnt work, i might have to change my values in `config.yaml` it obviously mentions for single user ... might vhave to do like https://github.com/juicedata/juicefs-csi-driver/issues/405
+
+
+see also :
+
+* https://juicefs.com/docs/csi/guide/pv#dynamic-provisioning
+* https://juicefs.com/docs/csi/guide/pv/#usage
+* https://juicefs.medium.com/k8s-data-persistence-getting-started-with-juicefs-csi-driver-288dedcefd01
+
+
+I think th eproblem is not so easy to solve: how to use one and only one juicefs storage class for several apps
