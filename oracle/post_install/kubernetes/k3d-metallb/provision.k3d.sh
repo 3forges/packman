@@ -78,12 +78,14 @@ reg_name='k3d-registry'
 reg_port='5001'
 docker stop ${reg_name} || true
 docker rm ${reg_name} || true
-if [ "$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true)" != 'true' ]; then
-  docker run \
-    -d --restart=always -p "127.0.0.1:${reg_port}:5000" --network bridge --name "${reg_name}" \
-    registry:2
-fi
-
+# if [ "$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true)" != 'true' ]; then
+#   docker run \
+#     -d --restart=always -p "127.0.0.1:${reg_port}:5000" --network bridge --name "${reg_name}" \
+#     registry:2
+# fi
+docker run \
+  -d --restart=always -p "127.0.0.1:${reg_port}:5000" --network bridge --name "${reg_name}" \
+  registry:2
 # 3.b.- Add the registry config to the nodes
 #
 # This is necessary because localhost resolves to loopback addresses that are
