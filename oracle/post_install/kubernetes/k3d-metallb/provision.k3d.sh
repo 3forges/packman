@@ -16,18 +16,18 @@ arkade version
 
 # 2./ Install kind
 
-figlet 'Install kind'
+figlet 'Install k3d'
 
 
-if ! [ -f /usr/local/bin/kind ]; then
-  arkade get kind
-  sudo mv ${HOME}/.arkade/bin/kind /usr/local/bin/
+if ! [ -f /usr/local/bin/k3d ]; then
+  arkade get k3d
+  sudo mv ${HOME}/.arkade/bin/k3d /usr/local/bin/
 else
-  figlet 'kind already installed'
-  ls -alh /usr/local/bin/kind
+  figlet 'k3d already installed'
+  ls -alh /usr/local/bin/k3d
 fi;
 
-kind version
+k3d version
 
 # 2./ Install kubectl and helm
 
