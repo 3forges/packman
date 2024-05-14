@@ -217,4 +217,31 @@ kubectl apply -f ./test-pod.yaml -n test
 
 ```
 
+```bash
+helm repo add jupyterhub https://hub.jupyter.org/helm-chart/
+helm repo update
 
+cat <<EOF >./config.yaml
+singleuser:
+  storage:
+    capacity: 2Gi
+    dynamic:
+      storageClass: nfs-csi
+EOF
+# helm delete decoderleco-jupyter -n decoderleco
+helm upgrade --cleanup-on-fail \
+  --install decoderleco-jupyter jupyterhub/jupyterhub \
+  --namespace decoderleco \
+  --create-namespace \
+  --version=3.3.7 \
+  --values config.yaml
+
+helm delete decoderleco-jupyter -n decoderleco
+
+```
+
+And it does not work, I get this error:
+
+```bash
+2024-05-14T19:07:44.394431Z [Warning] 0/4 nodes are available: pod has unbound immediate PersistentVolumeClaims. preemption: 0/4 nodes are available: 4 Preemption is not helpful for scheduling..
+```
