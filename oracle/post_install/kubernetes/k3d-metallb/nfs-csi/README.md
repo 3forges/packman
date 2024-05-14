@@ -245,3 +245,6 @@ And it does not work, I get this error:
 ```bash
 2024-05-14T19:07:44.394431Z [Warning] 0/4 nodes are available: pod has unbound immediate PersistentVolumeClaims. preemption: 0/4 nodes are available: 4 Preemption is not helpful for scheduling..
 ```
+
+
+je pense que l'erreur vient du fait que je devrais, donner à la valeur du `share` dans la StorageClass, à `/data/k8s_storage`, au lieu de `/` cf. le docker-compose du serveur nfs.
