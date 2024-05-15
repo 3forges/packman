@@ -180,7 +180,8 @@ reclaimPolicy: Delete
 # volumeBindingMode: Immediate
 volumeBindingMode: WaitForFirstConsumer
 mountOptions:
-  - nfsvers=4.2
+  - nfsvers=4.1
+  # - nfsvers=4.2
 EOF
 
 kubectl apply -f ./csi-driver-storage-class.yaml
@@ -201,13 +202,16 @@ spec:
   resources:
     requests:
       storage: 2Gi
-  storageClassName: nfs-csi
+  volumeMode: Filesystem
+  storageClassName: nfs-csi   ### remove this line to test the default StorageClass
 EOF
 
 kubectl create ns test 
 kubectl apply -f ./test-pvc.yaml -n test
 # kubectl delete -f ./test-pvc.yaml -n test
 # kubectl --namespace=kube-system logs deployment.apps/csi-nfs-controller
+kubectl get all,pvc -n test
+kubectl get pvc -n test --watch
 
 cat <<EOF >./test-pod.yaml
 ---
@@ -319,3 +323,14 @@ And it does not work, I get this error:
 
 
 je pense que l'erreur vient du fait que je devrais, donner à la valeur du `share` dans la StorageClass, à `/data/k8s_storage`, au lieu de `/` cf. le docker-compose du serveur nfs.
+
+
+
+après tout les tests que j'ai fait, les seuls tests qui me viennent à l'esprit sont:
+* soit changer de (version de?) helm chart, soit carrément oublier le helm chart pour passer par une autre méthode de déploiemet du repo officiel
+* vérifier que mon serveur nfs fonctionne correctement en montant un folder nfs avec client nfs ds un pod
+* mon serveur nfs est en version 4.2 de nfs: peut-être que le provisioner ne supporte que jusqu'à la version 4.1 de nfs ? bref, changer de serveur nfs, pour voir ce que cela donne
+* et sinon on passe à un autre csi driver:
+  * https://github.com/ctrox/csi-s3
+  * https://artifacthub.io/packages/helm/kubeblocks/csi-s3  // https://github.com/apecloud/helm-charts/tree/main/charts
+  * https://yandex.cloud/en/docs/managed-kubernetes/operations/applications/csi-s3?utm_referrer=https%3A%2F%2Fwww.google.com%2F
