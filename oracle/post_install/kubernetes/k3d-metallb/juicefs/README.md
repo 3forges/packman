@@ -111,7 +111,8 @@ singleuser:
     dynamic:
       storageClass: juicefs-sc
 EOF
-
+helm repo add jupyterhub https://hub.jupyter.org/helm-chart/
+helm repo update
 helm upgrade --cleanup-on-fail \
   --install decoderleco-jupyter jupyterhub/jupyterhub \
   --namespace decoderleco \

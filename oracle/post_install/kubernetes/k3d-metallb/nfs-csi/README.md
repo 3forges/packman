@@ -84,6 +84,19 @@ nfs-server-1  |
 
 ```
 
+* The generated `/etc/exports`:
+
+```bash
+nfs-server-1  | ==================================================================
+nfs-server-1  |       STARTING SERVICES ...
+nfs-server-1  | ==================================================================
+nfs-server-1  | ----> starting rpcbind
+nfs-server-1  | Generated /etc/exports:
+nfs-server-1  | /data 0.0.0.0(fsid=0,rw,insecure,sync,no_subtree_check,no_root_squash,no_auth_nlm)
+nfs-server-1  | /data/k8s_storage 0.0.0.0(rw,insecure,sync,no_subtree_check,no_root_squash,no_auth_nlm)
+
+```
+
 ## Deploy the CSI Driver
 
 * https://github.com/kubernetes-csi/csi-driver-nfs/blob/master/deploy/example/README.md#prerequisite
@@ -129,6 +142,7 @@ export KUBELET_DIR="/var/lib/kubelet"
 helm install csi-driver-nfs csi-driver-nfs/csi-driver-nfs \
     --namespace kube-system \
     --set kubeletDir=${KUBELET_DIR}
+# helm delete csi-driver-nfs --namespace kube-system
 ```
 
 ```bash
@@ -137,8 +151,11 @@ kubectl --namespace=kube-system get pods --selector="app.kubernetes.io/instance=
 
 ```bash
 export NFS_SERVER_CONTAINER_NAME="nfs-server-1"
-export K3D_NET_NAME="kind"
-docker network connect "${K3D_NET_NAME}" "${NFS_SERVER_CONTAINER_NAME}" || true
+export KND_NET_NAME="kind"
+docker network connect "${KND_NET_NAME}" "${NFS_SERVER_CONTAINER_NAME}" || true
+docker network connect "${KND_NET_NAME}" "k3d_net_plumber" || true
+
+docker exec -it k3d_net_plumber sh -c "ping -c 4 nfs-server-1"
 ```
 
 ```bash
@@ -152,18 +169,23 @@ metadata:
   name: nfs-csi
 provisioner: nfs.csi.k8s.io
 parameters:
-  server: ${NFS_SERVER_CONTAINER_NAME}
-  share: /
+  # share: /k8s_storage
+  share:  /data/k8s_storage   ### NFS server's exported directory
+  server: ${NFS_SERVER_CONTAINER_NAME}   ### NFS server's IP/FQDN
+  subDir: \${pvc.metadata.namespace}-\${pvc.metadata.name}-\${pv.metadata.name}  ### Folder/subdir name template
   # csi.storage.k8s.io/provisioner-secret is only needed for providing mountOptions in DeleteVolume
   # csi.storage.k8s.io/provisioner-secret-name: "mount-options"
   # csi.storage.k8s.io/provisioner-secret-namespace: "default"
 reclaimPolicy: Delete
-volumeBindingMode: Immediate
+# volumeBindingMode: Immediate
+volumeBindingMode: WaitForFirstConsumer
 mountOptions:
   - nfsvers=4.2
 EOF
 
 kubectl apply -f ./csi-driver-storage-class.yaml
+# kubectl delete -f ./csi-driver-storage-class.yaml
+# kubectl --namespace=kube-system logs deployment.apps/csi-nfs-controller
 
 # test using the storage class
 
@@ -184,6 +206,8 @@ EOF
 
 kubectl create ns test 
 kubectl apply -f ./test-pvc.yaml -n test
+# kubectl delete -f ./test-pvc.yaml -n test
+# kubectl --namespace=kube-system logs deployment.apps/csi-nfs-controller
 
 cat <<EOF >./test-pod.yaml
 ---
@@ -213,9 +237,56 @@ spec:
 EOF
 
 kubectl apply -f ./test-pod.yaml -n test
+# kubectl delete -f ./test-pod.yaml -n test
+# kubectl --namespace=kube-system logs deployment.apps/csi-nfs-controller
+
+# plumber pod
+
+
+cat <<EOF >./plumber-pod.yaml
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: plumber
+spec:
+  nodeSelector:
+    "kubernetes.io/os": linux
+  containers:
+    - image: localhost:5001/decoderleco/k3d_net_plumber:0.0.1-alpha
+      name: plumber
+      command:
+        - "/bin/sh"
+        - "-c"
+        - while true; do echo $(date) >> /dev/null; sleep 1; done
+
+EOF
+
+kubectl apply -f ./plumber-pod.yaml -n test
+# kubectl delete -f ./plumber-pod.yaml -n test
+kubectl -n test exec pod/plumber -- sh -c "ping -c 4 nfs-server-1"
+
+
+# ~/.nfs-service$ kubectl -n test exec pod/plumber -- sh -c "ping -c 4 nfs-server-1"
+# PING nfs-server-1 (172.18.0.9) 56(84) bytes of data.
+# 64 bytes from nfs-server-1.kind (172.18.0.9): icmp_seq=1 ttl=63 time=0.174 ms
+# 64 bytes from nfs-server-1.kind (172.18.0.9): icmp_seq=2 ttl=63 time=0.096 ms
+# 64 bytes from nfs-server-1.kind (172.18.0.9): icmp_seq=3 ttl=63 time=0.079 ms
+# 64 bytes from nfs-server-1.kind (172.18.0.9): icmp_seq=4 ttl=63 time=0.095 ms
+# 
+# --- nfs-server-1 ping statistics ---
+# 4 packets transmitted, 4 received, 0% packet loss, time 3032ms
+# rtt min/avg/max/mdev = 0.079/0.111/0.174/0.037 ms
+
+
+
 
 
 ```
+
+
+
+
 
 ```bash
 helm repo add jupyterhub https://hub.jupyter.org/helm-chart/

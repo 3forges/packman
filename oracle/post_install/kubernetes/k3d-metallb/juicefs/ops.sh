@@ -35,8 +35,8 @@ juicefs --version
 
 
 # Replace relevant options with the actual object storage being used
-export MINIO_ACCESS_KEY="f3LZ9oci8OkyVc6eHmyw"
-export MINIO_SECRET_KEY="ay8oI3CHTjGRtw1t1ytVlfa4XkJs0VaNwRo5d2VW"
+export MINIO_ACCESS_KEY="EVZInRuLQ7EcAVVaP7rp"
+export MINIO_SECRET_KEY="zOW2r4vd2yvvKNbRmoSU0awwbi5CL63K6708WyM3"
 
 juicefs format --storage s3 \
     --bucket http://127.0.0.1:9000/juicefs \

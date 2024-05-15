@@ -26,13 +26,13 @@ helm upgrade --install juicefs-csi-driver juicefs/juicefs-csi-driver -n kube-sys
 export minio_container_name="minio"
 # docker network connect "kind" "${minio_container_name}"
 export MINIO_BUCKET_URL="http://${minio_container_name}:9000/juicefs"
-export MINIO_ACCESS_KEY="f3LZ9oci8OkyVc6eHmyw"
-export MINIO_SECRET_KEY="ay8oI3CHTjGRtw1t1ytVlfa4XkJs0VaNwRo5d2VW"
+export MINIO_ACCESS_KEY="EVZInRuLQ7EcAVVaP7rp"
+export MINIO_SECRET_KEY="zOW2r4vd2yvvKNbRmoSU0awwbi5CL63K6708WyM3"
 
 export JUICEFS_METADATA_URL="sqlite3://myjfs.db"
 
-figlet 'JuiceFS Test'
-cat <<EOF >./juicefs_test.yaml
+figlet 'JuiceFS SC'
+cat <<EOF >./juicefs_sc.yaml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -60,6 +60,16 @@ parameters:
   csi.storage.k8s.io/provisioner-secret-namespace: default
   csi.storage.k8s.io/node-publish-secret-name: juicefs-secret
   csi.storage.k8s.io/node-publish-secret-namespace: default
+  # subDir: \${pvc.metadata.namespace}-\${pvc.metadata.name}-\${pv.metadata.name}  ### Folder/subdir name template
+  pathPattern: "\${.PVC.namespace}-\${.PVC.name}-\${.PV.name}"
+EOF
+kubectl apply -f ./juicefs_sc.yaml
+```
+
+```bash
+
+figlet 'JuiceFS Test'
+cat <<EOF >./juicefs_test.yaml
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -100,3 +110,6 @@ spec:
 EOF
 
 kubectl apply -f ./juicefs_test.yaml
+
+
+```
