@@ -334,3 +334,4 @@ après tout les tests que j'ai fait, les seuls tests qui me viennent à l'esprit
   * https://github.com/ctrox/csi-s3
   * https://artifacthub.io/packages/helm/kubeblocks/csi-s3  // https://github.com/apecloud/helm-charts/tree/main/charts
   * https://yandex.cloud/en/docs/managed-kubernetes/operations/applications/csi-s3?utm_referrer=https%3A%2F%2Fwww.google.com%2F
+  * https://github.com/yandex-cloud/k8s-csi-s3
