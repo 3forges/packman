@@ -63,10 +63,8 @@ parameters:
   # subDir: \${pvc.metadata.namespace}-\${pvc.metadata.name}-\${pv.metadata.name}  ### Folder/subdir name template
   pathPattern: "\${.PVC.namespace}-\${.PVC.name}-\${.PV.name}"
 EOF
-kubectl apply -f ./juicefs_sc.yaml
-```
 
-```bash
+kubectl apply -f ./juicefs_sc.yaml
 
 figlet 'JuiceFS Test'
 cat <<EOF >./juicefs_test.yaml
@@ -111,5 +109,3 @@ EOF
 
 kubectl apply -f ./juicefs_test.yaml
 
-
-```
