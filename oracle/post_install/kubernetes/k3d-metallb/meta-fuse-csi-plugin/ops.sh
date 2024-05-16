@@ -189,3 +189,5 @@ kubectl exec pod/mfcp-example-proxy-mountpoint-s3 -c starter -- sh -c "pwd"
 
 # ----
 # Ok It now works on ARM64, but I am not sure I can do dynamic volume provisioning with that csi driver, unfortunately... 
+
+# https://github.com/pfnet-research/meta-fuse-csi-plugin/issues/5
