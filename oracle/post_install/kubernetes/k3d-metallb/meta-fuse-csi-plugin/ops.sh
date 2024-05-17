@@ -72,22 +72,16 @@ kubectl get ds -n mfcp-system
 figlet "Deploy Example"
 
 
-docker pull quay.io/minio/minio:latest
-docker tag quay.io/minio/minio:latest localhost:5001/quay.io/minio/minio:latest
-docker pull ghcr.io/pfnet-research/meta-fuse-csi-plugin/mfcp-example-proxy-mountpoint-s3:latest
-docker tag ghcr.io/pfnet-research/meta-fuse-csi-plugin/mfcp-example-proxy-mountpoint-s3:latest localhost:5001/ghcr.io/pfnet-research/meta-fuse-csi-plugin/mfcp-example-proxy-mountpoint-s3:latest
-docker pull busybox
-docker tag busybox localhost:5001/busybox
-
-docker push localhost:5001/quay.io/minio/minio:latest
-docker push localhost:5001/ghcr.io/pfnet-research/meta-fuse-csi-plugin/mfcp-example-proxy-mountpoint-s3:latest
-docker push localhost:5001/busybox
 
 
-
+# ---
+# # The below image is used to spin up
+# # the 'starter' container of the example pod [ ./examples/proxy/mountpoint-s3/deploy.yaml]
+# # And this image needs to be adpated and re-built locally for ARM64
+# ---
 # ghcr.io/pfnet-research/meta-fuse-csi-plugin/mfcp-example-proxy-mountpoint-s3:latest
-export IMG_GUN="ghcr.io/pfnet-research/meta-fuse-csi-plugin/mfcp-example-proxy-mountpoint-s3:latest"
-sed -i "s#image: ${IMG_GUN}#image: localhost:5001/${IMG_GUN}#g" ./examples/proxy/mountpoint-s3/deploy.yaml
+# export IMG_GUN="ghcr.io/pfnet-research/meta-fuse-csi-plugin/mfcp-example-proxy-mountpoint-s3:latest"
+# sed -i "s#image: ${IMG_GUN}#image: localhost:5001/${IMG_GUN}#g" ./examples/proxy/mountpoint-s3/deploy.yaml
 
 export MINIO_IMG_GUN="quay.io/minio/minio:latest"
 sed -i "s#image: ${MINIO_IMG_GUN}#image: localhost:5001/${MINIO_IMG_GUN}#g" ./examples/proxy/mountpoint-s3/deploy.yaml
@@ -101,22 +95,6 @@ sed -i "s#image: ${BUSYBOX_IMG_GUN}#image: localhost:5001/${BUSYBOX_IMG_GUN}#g" 
 # > the starter container image is only available for amd64 x86_64: SO i need to build my own image of the starter, which will probably require to build the starter go package from source
 
 # Building starter image:
-
-# >> ERROR no. 1 >>
-# #   28 | >>> RUN wget https://s3.amazonaws.com/mountpoint-s3-release/1.0.1/x86_64/mount-s3-1.0.1-x86_64.deb -O mount-s3.deb && dpkg -i mount-s3.deb
-# https://github.com/awslabs/mountpoint-s3/releases/tag/mountpoint-s3-1.6.0
-# https://s3.amazonaws.com/mountpoint-s3-release/1.6.0/arm64/mount-s3-1.6.0-arm64.deb
-
-# # export TO_REPLACE="https://s3.amazonaws.com/mountpoint-s3-release/1.0.1/x86_64/mount-s3-1.0.1-x86_64.deb"
-# # export TO_REPLACE_BY="https://s3.amazonaws.com/mountpoint-s3-release/1.0.1/arm64/mount-s3-1.0.1-arm64.deb"
-# # sed -i "s#${TO_REPLACE}#${TO_REPLACE_BY}#g" ./examples/proxy/mountpoint-s3/Dockerfile
-
-# # # RUN wget https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/bin/mc && chmod +x /usr/bin/mc
-# # export TO_REPLACE='RUN wget https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/bin/mc && chmod +x /usr/bin/mc'
-# # # export TO_REPLACE_BY="RUN curl -LO https://dl.min.io/client/mc/release/linux-arm64/mc.deb && ls -alh ./mc.deb && dpkg -i ./mc.deb && apt-get install -y"
-# # export TO_REPLACE_BY='RUN wget https://dl.min.io/client/mc/release/linux-arm64/mc.deb && ls -alh ./mc.deb && dpkg -i ./mc.deb && apt-get install -y'
-# # # export TO_REPLACE_BY="https://dl.min.io/client/mc/release/linux-arm64/mc.deb"
-# # sed -i "s#${TO_REPLACE}#${TO_REPLACE_BY}#g" ./examples/proxy/mountpoint-s3/Dockerfile
 
 # cat ./examples/proxy/mountpoint-s3/Dockerfile
 
