@@ -1,21 +1,5 @@
 #!/bin/bash
 
-sudo sysctl fs.inotify.max_user_instances=8192
-sudo sysctl fs.inotify.max_user_watches=524288
-sudo sysctl -p
-
-cat /etc/sysctl.conf
-cat /etc/sysctl.conf | grep inotify
-
-
-echo '# - ##### ##### ##### ##### ' | sudo tee -a /etc/sysctl.conf
-echo '# - ##### Configuration for ' | sudo tee -a /etc/sysctl.conf
-echo '# - ##### kubernetes csi driver https://github.com/pfnet-research/meta-fuse-csi-plugin ' | sudo tee -a /etc/sysctl.conf
-echo '# - ## actually for kind: https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files'
-echo 'fs.inotify.max_user_instances=8192' | sudo tee -a /etc/sysctl.conf
-echo 'fs.inotify.max_user_watches=524288' | sudo tee -a /etc/sysctl.conf
-
-
 # ---
 # 
 # sudo apt-get install -y build-essential
@@ -84,9 +68,15 @@ figlet "Deploy Example"
 # sed -i "s#image: ${IMG_GUN}#image: localhost:5001/${IMG_GUN}#g" ./examples/proxy/mountpoint-s3/deploy.yaml
 
 export MINIO_IMG_GUN="quay.io/minio/minio:latest"
+docker pull ${MINIO_IMG_GUN}
+docker tag ${MINIO_IMG_GUN} localhost:5001/${MINIO_IMG_GUN}
+docker push localhost:5001/${MINIO_IMG_GUN}
 sed -i "s#image: ${MINIO_IMG_GUN}#image: localhost:5001/${MINIO_IMG_GUN}#g" ./examples/proxy/mountpoint-s3/deploy.yaml
 
 export BUSYBOX_IMG_GUN="busybox"
+docker pull ${BUSYBOX_IMG_GUN}
+docker tag ${BUSYBOX_IMG_GUN} localhost:5001/${BUSYBOX_IMG_GUN}
+docker push localhost:5001/${BUSYBOX_IMG_GUN}
 sed -i "s#image: ${BUSYBOX_IMG_GUN}#image: localhost:5001/${BUSYBOX_IMG_GUN}#g" ./examples/proxy/mountpoint-s3/deploy.yaml
 
 
@@ -117,6 +107,11 @@ RUN mc --version
 
 COPY <<ETOF /test.txt
 This is a test file for minio
+This text file is pushed to minio bucket
+from the starter container of the example pod
+[./examples/proxy/mountpoint-s3/deploy.yaml]
+This example is running on ARMv8 64bits CPU arch
+aarch64
 ETOF
 
 COPY <<ETOF /configure_minio.sh
@@ -145,9 +140,8 @@ export STARTER_IMG_GUN="$(docker images | grep mfcp-example-proxy-mountpoint-s3 
 docker tag ${STARTER_IMG_GUN} localhost:5001/${STARTER_IMG_GUN}-arm64-beta
 docker push localhost:5001/${STARTER_IMG_GUN}-arm64-beta
 
-git checkout ./examples/proxy/mountpoint-s3/deploy.yaml
+# git checkout ./examples/proxy/mountpoint-s3/deploy.yaml
 export PREV_STARTER_IMG_GUN="ghcr.io/pfnet-research/meta-fuse-csi-plugin/mfcp-example-proxy-mountpoint-s3:latest"
-# export TO_REPLACE="localhost:5001/${PREV_STARTER_IMG_GUN}"
 export TO_REPLACE="${PREV_STARTER_IMG_GUN}"
 export TO_REPLACE_BY="localhost:5001/${STARTER_IMG_GUN}-arm64-beta"
 sed -i "s#${TO_REPLACE}#${TO_REPLACE_BY}#g" ./examples/proxy/mountpoint-s3/deploy.yaml
@@ -164,6 +158,9 @@ kubectl logs pod/mfcp-example-proxy-mountpoint-s3 -c busybox
 kubectl exec pod/mfcp-example-proxy-mountpoint-s3 -c starter -- sh -c "pwd"
 
 
+figlet 'final test in busybox'
+
+kubectl exec pod/mfcp-example-proxy-mountpoint-s3 -c busybox -- sh -c "cat /data/test.txt"
 
 # ----
 # Ok It now works on ARM64, but I am not sure I can do dynamic volume provisioning with that csi driver, unfortunately... 

@@ -15,6 +15,9 @@ cd ./oracle/post_install/kubernetes/k3d-metallb/
 chmod +x ./*.sh
 chmod +x ./*.k3d.sh
 
+
+./sysctl.fs.inotify.sh
+
 ./provision.sh
 # ./provision.k3d.sh
 
