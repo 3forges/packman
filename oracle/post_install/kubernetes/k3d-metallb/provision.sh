@@ -91,6 +91,8 @@ kind delete clusters --all
 # https://github.com/kubernetes-sigs/kind/issues/2875
 # https://github.com/containerd/containerd/blob/main/docs/cri/config.md#registry-configuration
 # See: https://github.com/containerd/containerd/blob/main/docs/hosts.md
+# https://kind.sigs.k8s.io/docs/user/configuration#extra-mounts
+# extraMounts of /etc/localtime and /etc/timezone are there for later deployment of https://github.com/k8tz/k8tz
 cat <<EOF | kind create cluster -n ${KND_CLUSTER_NAME} --wait 15m --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -100,10 +102,34 @@ containerdConfigPatches:
     config_path = "/etc/containerd/certs.d"
 nodes:
 - role: control-plane
+  extraMounts:
+  - hostPath: /etc/timezone
+    containerPath: /etc/timezone
+    readOnly: true
 - role: control-plane
+  extraMounts:
+  - hostPath: /etc/timezone
+    containerPath: /etc/timezone
+    readOnly: true
+  - hostPath: /etc/localtime
+    containerPath: /etc/localtime
+    readOnly: true
 - role: worker
+  extraMounts:
+  - hostPath: /etc/timezone
+    containerPath: /etc/timezone
+    readOnly: true
+  - hostPath: /etc/localtime
+    containerPath: /etc/localtime
+    readOnly: true
 - role: worker
-# - role: worker
+  extraMounts:
+  - hostPath: /etc/timezone
+    containerPath: /etc/timezone
+    readOnly: true
+  - hostPath: /etc/localtime
+    containerPath: /etc/localtime
+    readOnly: true
 EOF
 
 # Then we wait a bit to let the cluster get up'n running cosily
@@ -165,6 +191,10 @@ data:
 EOF
 
 
+figlet 'k8tz'
+
+chmod +x ./k8tz.sh
+./k8tz.sh
 
 figlet 'Test cluster + registry'
 docker pull arm64v8/hello-world
