@@ -5,3 +5,14 @@
 *.tfstate.backup
 .terraform
 .terraform.lock.hcl
+
+# --- # --- # --- # --- # --- 
+# --- # --- # --- # --- # --- 
+# secrets in local files
+# --- # --- # --- # --- # --- 
+# --- # --- # --- # --- # --- 
+
+*.secret
+.*.secret
+./*.secret
+./.*.secret

@@ -310,8 +310,10 @@ resource "null_resource" "minio_deployment" {
   }
   provisioner "remote-exec" {
     inline = [
+      "echo \"export MINIO_CSI_DRIVER_ROOT_USER=${data.local_file.MINIO_CSI_DRIVER_ROOT_USER.content}\" | tee -a ~/.bashrc",
+      "echo \"export MINIO_CSI_DRIVER_ROOT_PASSWORD=${data.local_file.MINIO_CSI_DRIVER_ROOT_PASSWORD.content}\" | tee -a ~/.bashrc",
       "chmod +x /tmp/deploy_minio.sh",
-      "/tmp/deploy_minio.sh args",
+      "source ~/.bashrc && /tmp/deploy_minio.sh"
     ]
   }
   depends_on = [
@@ -349,7 +351,7 @@ resource "null_resource" "jupyterlab_deployment" {
     null_resource.docker_installation
   ]
 }
-
+#build_jupyterhub_container_img.sh
 #deploy_jupyterlab.sh
 
 
@@ -384,3 +386,78 @@ resource "null_resource" "provision_kubernetes" {
     null_resource.docker_installation
   ]
 }
+
+
+
+
+###### JUPYTERHUB
+
+# ---
+#  Jupyterhub Container Image Build
+resource "null_resource" "jupyterhub_img_build" {
+  # ...
+
+  # Establishes connection to be used by all
+  # generic remote provisioners (i.e. file/remote-exec)
+  connection {
+    type = "ssh"
+    user = var.vm_ssh_auth_desired_keypair.username
+    // password = var.root_password
+    private_key = file(var.vm_ssh_auth_desired_keypair.private_key_file)
+    host        = oci_core_instance.ubuntu_vm.public_ip
+  }
+  # ---
+  #  Jupyterlab Deployment
+  provisioner "file" {
+    source      = "./post_install/build_jupyterhub_container_img.sh"
+    destination = "/tmp/build_jupyterhub_container_img.sh"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/build_jupyterhub_container_img.sh",
+      "/tmp/build_jupyterhub_container_img.sh"
+    ]
+  }
+  depends_on = [
+    null_resource.docker_installation,
+    null_resource.provision_kubernetes
+  ]
+}
+#
+
+
+# ---
+#  Jupyterhub Deployment
+resource "null_resource" "jupyterhub_deployment" {
+  # ...
+
+  # Establishes connection to be used by all
+  # generic remote provisioners (i.e. file/remote-exec)
+  connection {
+    type = "ssh"
+    user = var.vm_ssh_auth_desired_keypair.username
+    // password = var.root_password
+    private_key = file(var.vm_ssh_auth_desired_keypair.private_key_file)
+    host        = oci_core_instance.ubuntu_vm.public_ip
+  }
+  # ---
+  #  Jupyterlab Deployment
+  provisioner "file" {
+    source      = "./post_install/kubernetes/k3d-metallb/yandex-csi-s3/jupyterhub.sh"
+    destination = "/tmp/deploy_jupyterhub.sh"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "echo \"export MINIO_CSI_DRIVER_ROOT_USER=${data.local_file.MINIO_CSI_DRIVER_ROOT_USER.content}\" | tee -a ~/.bashrc",
+      "echo \"export MINIO_CSI_DRIVER_ROOT_PASSWORD=${data.local_file.MINIO_CSI_DRIVER_ROOT_PASSWORD.content}\" | tee -a ~/.bashrc",
+      "chmod +x /tmp/deploy_jupyterhub.sh",
+      "source ~/.bashrc && /tmp/deploy_jupyterhub.sh",
+    ]
+  }
+  depends_on = [
+    null_resource.docker_installation,
+    null_resource.jupyterhub_img_build,
+    null_resource.provision_kubernetes
+  ]
+}
+#

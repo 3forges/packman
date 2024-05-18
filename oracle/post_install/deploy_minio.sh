@@ -1,11 +1,18 @@
 #!/bin/bash
 
+export MINIO_ROOT_USER=${MINIO_CSI_DRIVER_ROOT_USER:-"ROOTNAME"}
+export MINIO_ROOT_PASSWORD=${MINIO_CSI_DRIVER_ROOT_PASSWORD:-"CHANGEME123"}
+# ---
+# This minio will be used by Kubernetes CSI DRIVER 
+# [oracle/post_install/kubernetes/k3d-metallb/yandex-csi-s3/arm64.sh]
+# --- 
+figlet 'Deploy Minio'
 sudo mkdir -p ~/minio/data
 sudo docker run -d \
    -p 0.0.0.0:9000:9000 \
    -p 0.0.0.0:9001:9001 \
    --name minio \
    -v ~/minio/data:/data \
-   -e "MINIO_ROOT_USER=ROOTNAME" \
-   -e "MINIO_ROOT_PASSWORD=CHANGEME123" \
+   -e "MINIO_ROOT_USER=${MINIO_ROOT_USER}" \
+   -e "MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}" \
    quay.io/minio/minio server /data --console-address ":9001"
