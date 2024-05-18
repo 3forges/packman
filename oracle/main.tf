@@ -382,7 +382,8 @@ resource "null_resource" "provision_kubernetes" {
     ]
   }
   depends_on = [
-    null_resource.docker_installation
+    null_resource.docker_installation,
+    null_resource.minio_deployment
   ]
 }
 
@@ -447,8 +448,8 @@ resource "null_resource" "jupyterhub_deployment" {
   }
   provisioner "remote-exec" {
     inline = [
-      "echo \"export MINIO_CSI_DRIVER_ROOT_USER=${data.local_file.MINIO_CSI_DRIVER_ROOT_USER.content}\" | tee -a ~/.bashrc",
-      "echo \"export MINIO_CSI_DRIVER_ROOT_PASSWORD=${data.local_file.MINIO_CSI_DRIVER_ROOT_PASSWORD.content}\" | tee -a ~/.bashrc",
+      "echo \"export MINIO_CSI_DRIVER_ROOT_USER='${data.local_file.MINIO_CSI_DRIVER_ROOT_USER.content}'\" | tee -a ~/.bashrc",
+      "echo \"export MINIO_CSI_DRIVER_ROOT_PASSWORD='${data.local_file.MINIO_CSI_DRIVER_ROOT_PASSWORD.content}'\" | tee -a ~/.bashrc",
       "chmod +x /tmp/deploy_jupyterhub.sh",
       "/tmp/deploy_jupyterhub.sh",
     ]

@@ -28,3 +28,13 @@ output "ubuntu_vm_summary" {
 #   description = "How to ssh into your VM."
 #   value       = local.ubuntu_vm_ssh_details
 # }
+
+output "minio_root_accesskey" {
+  description = "access key as root to the minio storage backend of the csi driver."
+  value       = "${data.local_file.MINIO_CSI_DRIVER_ROOT_USER.content}"
+}
+
+output "minio_root_secretkey" {
+  description = "access key as root to the minio storage backend of the csi driver."
+  value       = "${data.local_file.MINIO_CSI_DRIVER_ROOT_PASSWORD.content}"
+}
