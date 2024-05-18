@@ -31,6 +31,11 @@ go version
 
 figlet 'Build ARM64 S3 Csi Driver'
 
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
+
+sudo -E apt-get install -y build-essential
+
 # Credits to https://github.com/motoki317/k8s-csi-s3.git
 
 git clone https://github.com/decoder-leco/k8s-csi-s3.git ./k8s-csi-s3-arm64
