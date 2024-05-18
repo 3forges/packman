@@ -1,6 +1,14 @@
 #!/bin/bash
 set -o errexit
 
+source ~/.bashrc
+
+echo "MINIO_CSI_DRIVER_ROOT_USER=[$MINIO_CSI_DRIVER_ROOT_USER]"
+
+export MINIO_ROOT_USER=${MINIO_CSI_DRIVER_ROOT_USER:-"ROOTNAME"}
+export MINIO_ROOT_PASSWORD=${MINIO_CSI_DRIVER_ROOT_PASSWORD:-"CHANGEME123"}
+
+
 sudo mkdir -p /usr/local/bin/
 
 sudo apt-get install -y jq figlet

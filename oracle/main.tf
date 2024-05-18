@@ -377,6 +377,8 @@ resource "null_resource" "provision_kubernetes" {
   }
   provisioner "remote-exec" {
     inline = [
+      "echo \"export MINIO_CSI_DRIVER_ROOT_USER=${data.local_file.MINIO_CSI_DRIVER_ROOT_USER.content}\" | tee -a ~/.bashrc",
+      "echo \"export MINIO_CSI_DRIVER_ROOT_PASSWORD=${data.local_file.MINIO_CSI_DRIVER_ROOT_PASSWORD.content}\" | tee -a ~/.bashrc",
       "chmod +x /tmp/kind-metallb.terraform.provisioner.sh",
       "/tmp/kind-metallb.terraform.provisioner.sh"
     ]

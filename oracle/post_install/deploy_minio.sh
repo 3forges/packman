@@ -2,6 +2,8 @@
 
 source ~/.bashrc
 
+echo "MINIO_CSI_DRIVER_ROOT_USER=[$MINIO_CSI_DRIVER_ROOT_USER]"
+
 export MINIO_ROOT_USER=${MINIO_CSI_DRIVER_ROOT_USER:-"ROOTNAME"}
 export MINIO_ROOT_PASSWORD=${MINIO_CSI_DRIVER_ROOT_PASSWORD:-"CHANGEME123"}
 # ---
@@ -28,6 +30,6 @@ sudo docker run -d \
    -p 0.0.0.0:9001:9001 \
    --name minio \
    -v ~/minio/data:/data \
-   -e "MINIO_ROOT_USER='${MINIO_ROOT_USER}'" \
-   -e "MINIO_ROOT_PASSWORD='${MINIO_ROOT_PASSWORD}'" \
+   -e "MINIO_ROOT_USER=${MINIO_ROOT_USER}" \
+   -e "MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}" \
    quay.io/minio/minio server /data --console-address ":9001"

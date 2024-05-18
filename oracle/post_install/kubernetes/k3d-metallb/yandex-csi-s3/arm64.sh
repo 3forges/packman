@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ~/.bashrc
+
 # --- # --- # --- # --- 
 # --- # --- # --- # --- 
 # Install GOLANG
@@ -144,8 +146,10 @@ export MINIO_ROOT_PASSWORD=${MINIO_CSI_DRIVER_ROOT_PASSWORD:-"CHANGEME123"}
 export MINIO_ENDPOINT="http://${minio_container_name}:9000"
 # export MINIO_ACCESS_KEY="f7a5aJLswKEwYcmZAGXW"
 # export MINIO_SECRET_KEY="P6KujEDBpEoud9oBwHHGzCdzSEAm3P1TxZnzARtT"
+echo "MINIO_CSI_DRIVER_ROOT_USER=[$MINIO_CSI_DRIVER_ROOT_USER]"
 echo "MINIO_ROOT_USER=[$MINIO_ROOT_USER]"
 # echo "MINIO_ROOT_PASSWORD=$[$MINIO_ROOT_PASSWORD]"
+
 
 
 mc alias set targetted_minio ${MINIO_ENDPOINT} "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"

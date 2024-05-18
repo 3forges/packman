@@ -1,5 +1,12 @@
 #!/bin/bash
 
+source ~/.bashrc
+
+echo "MINIO_CSI_DRIVER_ROOT_USER=[$MINIO_CSI_DRIVER_ROOT_USER]"
+
+export MINIO_ROOT_USER=${MINIO_CSI_DRIVER_ROOT_USER:-"ROOTNAME"}
+export MINIO_ROOT_PASSWORD=${MINIO_CSI_DRIVER_ROOT_PASSWORD:-"CHANGEME123"}
+
 if [ -d ./packman ]; then
   rm -fr ./packman
 fi;
