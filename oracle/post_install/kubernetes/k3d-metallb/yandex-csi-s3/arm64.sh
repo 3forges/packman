@@ -134,16 +134,24 @@ ETOF
 # /usr/bin/mc cp /test.txt k8s-minio-dev/test-bucket
 # ETOF
 # chmod +x /configure_minio.sh
+export minio_container_name="minio"
+export MINIO_CSI_DRIVER_ROOT_USER='MINIO_CSI_DRIVER_ROOT_USER'
+export MINIO_CSI_DRIVER_ROOT_PASSWORD='bshwDxFP0vFBhob+6VxjtQrXBpRtWmammNjBwVUssFc='
 
-export MINIO_ROOT_USER=${MINIO_CSI_DRIVER_ROOT_USER:"ROOTNAME"}
-export MINIO_ROOT_PASSWORD=${MINIO_CSI_DRIVER_ROOT_PASSWORD:"CHANGEME123"}
+export MINIO_ROOT_USER=${MINIO_CSI_DRIVER_ROOT_USER:-"ROOTNAME"}
+export MINIO_ROOT_PASSWORD=${MINIO_CSI_DRIVER_ROOT_PASSWORD:-"CHANGEME123"}
 
 export MINIO_ENDPOINT="http://${minio_container_name}:9000"
 # export MINIO_ACCESS_KEY="f7a5aJLswKEwYcmZAGXW"
 # export MINIO_SECRET_KEY="P6KujEDBpEoud9oBwHHGzCdzSEAm3P1TxZnzARtT"
+echo "MINIO_ROOT_USER=$[$MINIO_ROOT_USER]"
+echo "MINIO_ROOT_PASSWORD=$[$MINIO_ROOT_PASSWORD]"
 
 
 mc alias set targetted_minio ${MINIO_ENDPOINT} "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
+mc ping ${MINIO_ENDPOINT}
+mc ping targetted_minio
+
 mc mb targetted_minio/minio-test-bucket
 mc cp ./test.txt targetted_minio/minio-test-bucket
 
@@ -153,8 +161,8 @@ export OUTPUT_SECRETS_MINIO=$(mc admin user svcacct add --name yandex_s3_csi_dri
 export CSI_DRIVER_MINIO_ACCESSKEY=$(echo "$OUTPUT_SECRETS_MINIO" | grep 'Access Key' | awk '{ print $NF }')
 export CSI_DRIVER_MINIO_SECRETKEY=$(echo "$OUTPUT_SECRETS_MINIO" | grep 'Secret Key' | awk '{ print $NF }')
 
-# echo "CSI_DRIVER_MINIO_ACCESSKEY=[${CSI_DRIVER_MINIO_ACCESSKEY}]"
-# echo "CSI_DRIVER_MINIO_SECRETKEY=[${CSI_DRIVER_MINIO_SECRETKEY}]"
+echo "CSI_DRIVER_MINIO_ACCESSKEY=[${CSI_DRIVER_MINIO_ACCESSKEY}]"
+echo "CSI_DRIVER_MINIO_SECRETKEY=[${CSI_DRIVER_MINIO_SECRETKEY}]"
 
 
 
