@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ~/.bashrc
+
 export MINIO_ROOT_USER=${MINIO_CSI_DRIVER_ROOT_USER:-"ROOTNAME"}
 export MINIO_ROOT_PASSWORD=${MINIO_CSI_DRIVER_ROOT_PASSWORD:-"CHANGEME123"}
 # ---
@@ -7,6 +9,9 @@ export MINIO_ROOT_PASSWORD=${MINIO_CSI_DRIVER_ROOT_PASSWORD:-"CHANGEME123"}
 # [oracle/post_install/kubernetes/k3d-metallb/yandex-csi-s3/arm64.sh]
 # --- 
 figlet 'Deploy Minio'
+
+echo "MINIO_ROOT_USER=$[$MINIO_ROOT_USER]"
+
 sudo mkdir -p ~/minio/data
 sudo docker run -d \
    -p 0.0.0.0:9000:9000 \

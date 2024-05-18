@@ -313,7 +313,7 @@ resource "null_resource" "minio_deployment" {
       "echo \"export MINIO_CSI_DRIVER_ROOT_USER=${data.local_file.MINIO_CSI_DRIVER_ROOT_USER.content}\" | tee -a ~/.bashrc",
       "echo \"export MINIO_CSI_DRIVER_ROOT_PASSWORD=${data.local_file.MINIO_CSI_DRIVER_ROOT_PASSWORD.content}\" | tee -a ~/.bashrc",
       "chmod +x /tmp/deploy_minio.sh",
-      "source ~/.bashrc && /tmp/deploy_minio.sh"
+      "/tmp/deploy_minio.sh"
     ]
   }
   depends_on = [
@@ -450,7 +450,7 @@ resource "null_resource" "jupyterhub_deployment" {
       "echo \"export MINIO_CSI_DRIVER_ROOT_USER=${data.local_file.MINIO_CSI_DRIVER_ROOT_USER.content}\" | tee -a ~/.bashrc",
       "echo \"export MINIO_CSI_DRIVER_ROOT_PASSWORD=${data.local_file.MINIO_CSI_DRIVER_ROOT_PASSWORD.content}\" | tee -a ~/.bashrc",
       "chmod +x /tmp/deploy_jupyterhub.sh",
-      "source ~/.bashrc && /tmp/deploy_jupyterhub.sh",
+      "/tmp/deploy_jupyterhub.sh",
     ]
   }
   depends_on = [

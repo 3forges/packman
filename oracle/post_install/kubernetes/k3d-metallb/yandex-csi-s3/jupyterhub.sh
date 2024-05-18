@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ~/.bashrc
+
 helm delete decoderleco-jupyter -n decoderleco || true
 
 mkdir -p ./jupyterhub_custom/
