@@ -323,36 +323,35 @@ resource "null_resource" "minio_deployment" {
 
 # ---
 #  Jupyterlab Deployment
-resource "null_resource" "jupyterlab_deployment" {
-  # ...
+# resource "null_resource" "jupyterlab_deployment" {
+#   # ...
+# 
+#   # Establishes connection to be used by all
+#   # generic remote provisioners (i.e. file/remote-exec)
+#   connection {
+#     type = "ssh"
+#     user = var.vm_ssh_auth_desired_keypair.username
+#     // password = var.root_password
+#     private_key = file(var.vm_ssh_auth_desired_keypair.private_key_file)
+#     host        = oci_core_instance.ubuntu_vm.public_ip
+#   }
+#   # ---
+#   #  Jupyterlab Deployment
+#   provisioner "file" {
+#     source      = "./post_install/deploy_jupyterlab.sh"
+#     destination = "/tmp/deploy_jupyterlab.sh"
+#   }
+#   provisioner "remote-exec" {
+#     inline = [
+#       "chmod +x /tmp/deploy_jupyterlab.sh",
+#       "/tmp/deploy_jupyterlab.sh",
+#     ]
+#   }
+#   depends_on = [
+#     null_resource.docker_installation
+#   ]
+# }
 
-  # Establishes connection to be used by all
-  # generic remote provisioners (i.e. file/remote-exec)
-  connection {
-    type = "ssh"
-    user = var.vm_ssh_auth_desired_keypair.username
-    // password = var.root_password
-    private_key = file(var.vm_ssh_auth_desired_keypair.private_key_file)
-    host        = oci_core_instance.ubuntu_vm.public_ip
-  }
-  # ---
-  #  Jupyterlab Deployment
-  provisioner "file" {
-    source      = "./post_install/deploy_jupyterlab.sh"
-    destination = "/tmp/deploy_jupyterlab.sh"
-  }
-  provisioner "remote-exec" {
-    inline = [
-      "chmod +x /tmp/deploy_jupyterlab.sh",
-      "/tmp/deploy_jupyterlab.sh",
-    ]
-  }
-  depends_on = [
-    null_resource.docker_installation
-  ]
-}
-#build_jupyterhub_container_img.sh
-#deploy_jupyterlab.sh
 
 
 
