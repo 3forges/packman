@@ -2,7 +2,27 @@
 
 source ~/.bashrc
 
-echo "MODIFICATION - DEPLOY MINIO ---"
+echo "# -------------------- # -------------------- "
+echo "# -------------------- # -------------------- "
+echo "# -------------------- "
+ls alh ~/.minio.secrets
+echo "# -------------------- "
+echo "# --- content of [~/.minio.secrets]"
+cat -n ~/.minio.secrets
+
+cp ~/.minio.secrets ~/.minio.secrets.sh
+chmod +x ~/.minio.secrets.sh
+source ~/.minio.secrets.sh
+
+echo "# -------------------- "
+echo "# --- After [source ~/.minio.secrets.sh] "
+echo "MINIO_CSI_DRIVER_ROOT_USER=[$MINIO_CSI_DRIVER_ROOT_USER]"
+
+echo "# -------------------- "
+echo "# -------------------- # -------------------- "
+echo "# -------------------- # -------------------- "
+
+echo "RE-MODIFICATION - DEPLOY MINIO ---"
 echo "MINIO_CSI_DRIVER_ROOT_USER=[$MINIO_CSI_DRIVER_ROOT_USER]"
 
 unset MINIO_ROOT_USER

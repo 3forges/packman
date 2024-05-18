@@ -310,8 +310,8 @@ resource "null_resource" "minio_deployment" {
   }
   provisioner "remote-exec" {
     inline = [
-      "echo \"export MINIO_CSI_DRIVER_ROOT_USER=${data.local_file.MINIO_CSI_DRIVER_ROOT_USER.content}\" | tee -a ~/.bashrc",
-      "echo \"export MINIO_CSI_DRIVER_ROOT_PASSWORD=${data.local_file.MINIO_CSI_DRIVER_ROOT_PASSWORD.content}\" | tee -a ~/.bashrc",
+      "echo \"export MINIO_CSI_DRIVER_ROOT_USER=${data.local_file.MINIO_CSI_DRIVER_ROOT_USER.content}\" | tee -a ~/.bashrc | tee -a ~/.minio.secrets",
+      "echo \"export MINIO_CSI_DRIVER_ROOT_PASSWORD=${data.local_file.MINIO_CSI_DRIVER_ROOT_PASSWORD.content}\" | tee -a ~/.bashrc | tee -a ~/.minio.secrets",
       "chmod +x /tmp/deploy_minio.sh",
       "/tmp/deploy_minio.sh"
     ]
