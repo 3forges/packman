@@ -11,8 +11,8 @@ export MINIO_ROOT_PASSWORD=${MINIO_CSI_DRIVER_ROOT_PASSWORD:-"CHANGEME123"}
 sudo apt-get install -y figlet
 figlet 'Deploy Minio'
 
-echo "MINIO_ROOT_USER=$[$MINIO_ROOT_USER]"
-echo "MINIO_ROOT_PASSWORD=$[$MINIO_ROOT_PASSWORD]"
+echo "MINIO_ROOT_USER=[$MINIO_ROOT_USER]"
+# echo "MINIO_ROOT_PASSWORD=[$MINIO_ROOT_PASSWORD]"
 
 sudo docker stop minio || true
 sudo docker rm minio || true
