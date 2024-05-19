@@ -15,7 +15,8 @@ chmod +x ~/.minio.secrets.sh
 source ~/.minio.secrets.sh
 
 export MINIO_CSI_DRIVER_ROOT_USER=$(cat ~/.minio.secrets.sh | grep 'MINIO_CSI_DRIVER_ROOT_USER' | awk -F '=' '{ print $NF }')
-export MINIO_CSI_DRIVER_ROOT_PASSWORD=$(cat ~/.minio.secrets.sh | grep 'MINIO_CSI_DRIVER_ROOT_PASSWORD' | awk -F '=' '{ print $NF }')
+export MINIO_CSI_DRIVER_ROOT_PASSWORD=$(cat ~/.minio.secrets.sh | grep 'MINIO_CSI_DRIVER_ROOT_PASSWORD' | awk -F '[' '{ print $NF }' | awk -F ']' '{ print $1 }')
+
 
 
 echo "# -------------------- "

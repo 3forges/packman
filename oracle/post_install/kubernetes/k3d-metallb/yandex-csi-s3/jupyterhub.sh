@@ -14,6 +14,7 @@ helm repo update
 # okay now there a new image :
 # [decoderleco/r-deno-py-jupyter:0.0.1-alpha-aarch64-hub]
 
+helm delete decoderleco-jupyter -n decoderleco || true
 
 # export JUP_CUSTOM_IMG="decoderleco/deno-jupyter:0.0.1-alpha-aarch64"
 export JUP_CUSTOM_IMG_NAME="decoderleco/r-deno-py-jupyter"
@@ -21,8 +22,8 @@ export JUP_CUSTOM_IMG_TAG="0.0.1-alpha-aarch64-hub"
 
 export JUP_CUSTOM_IMG="${JUP_CUSTOM_IMG_NAME}:${JUP_CUSTOM_IMG_TAG}"
 
-docker tag "${JUP_CUSTOM_IMG}" "localhost:5001/${JUP_CUSTOM_IMG}"
-docker push "localhost:5001/${JUP_CUSTOM_IMG}"
+docker tag "${JUP_CUSTOM_IMG}" "localhost:5001/${JUP_CUSTOM_IMG}-2"
+docker push "localhost:5001/${JUP_CUSTOM_IMG}-2"
 
 
 
@@ -34,7 +35,7 @@ singleuser:
     # Inspect the Dockerfile at:
     # https://github.com/jupyter/docker-stacks/tree/HEAD/datascience-notebook/Dockerfile
     name: localhost:5001/${JUP_CUSTOM_IMG_NAME}
-    tag: ${JUP_CUSTOM_IMG_TAG}
+    tag: ${JUP_CUSTOM_IMG_TAG}-2
   # 'cmd: null' allows the custom CMD of the Jupyter docker-stacks to be used
   # which performs further customization on startup.
   cmd: null

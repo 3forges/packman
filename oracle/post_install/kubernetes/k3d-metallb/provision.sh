@@ -200,9 +200,10 @@ EOF
 
 
 figlet 'k8tz'
-
-chmod +x ./k8tz.sh
-./k8tz.sh
+echo 'for the moment, k8tz chart seems bugged'
+echo 'skipped k8tz'
+# chmod +x ./k8tz.sh
+# ./k8tz.sh
 
 figlet 'Test cluster + registry'
 docker pull arm64v8/hello-world
