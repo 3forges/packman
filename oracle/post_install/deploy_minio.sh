@@ -14,9 +14,14 @@ cp ~/.minio.secrets ~/.minio.secrets.sh
 chmod +x ~/.minio.secrets.sh
 source ~/.minio.secrets.sh
 
+export MINIO_CSI_DRIVER_ROOT_USER=$(cat ~/.minio.secrets.sh | grep 'MINIO_CSI_DRIVER_ROOT_USER' | awk -F '=' '{ print $NF }')
+export MINIO_CSI_DRIVER_ROOT_PASSWORD=$(cat ~/.minio.secrets.sh | grep 'MINIO_CSI_DRIVER_ROOT_PASSWORD' | awk -F '=' '{ print $NF }')
+
+
 echo "# -------------------- "
 echo "# --- After [source ~/.minio.secrets.sh] "
 echo "MINIO_CSI_DRIVER_ROOT_USER=[$MINIO_CSI_DRIVER_ROOT_USER]"
+echo "MINIO_CSI_DRIVER_ROOT_PASSWORD=[$MINIO_CSI_DRIVER_ROOT_PASSWORD]"
 
 echo "# -------------------- "
 echo "# -------------------- # -------------------- "
@@ -38,7 +43,7 @@ sudo apt-get install -y figlet
 figlet 'Deploy Minio'
 
 echo "alors - MINIO_ROOT_USER=[$MINIO_ROOT_USER]"
-# echo "MINIO_ROOT_PASSWORD=[$MINIO_ROOT_PASSWORD]"
+echo "MINIO_ROOT_PASSWORD=[$MINIO_ROOT_PASSWORD]"
 
 sudo docker stop minio || true
 sudo docker rm minio || true

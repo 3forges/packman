@@ -58,8 +58,8 @@ figlet 'Prepare S3 CSI Driver ARM64 Images'
 
 # --
 # - first image: the CSI driver i re-built
-export REBUILT_CSI_DRIVER_IMG_NAME=$(docker images | grep yandex | awk '{ print $1 }')
-export REBUILT_CSI_DRIVER_IMG_TAG=$(docker images | grep yandex | awk '{ print $2 }')
+export REBUILT_CSI_DRIVER_IMG_NAME=$(docker images | grep yandex | head -n 1 | awk '{ print $1 }')
+export REBUILT_CSI_DRIVER_IMG_TAG=$(docker images | grep yandex | head -n 1 | awk '{ print $2 }')
 export REBUILT_CSI_DRIVER_GUN="${REBUILT_CSI_DRIVER_IMG_NAME}:${REBUILT_CSI_DRIVER_IMG_TAG}"
 
 echo "REBUILT_CSI_DRIVER_GUN=[${REBUILT_CSI_DRIVER_GUN}]"
@@ -152,9 +152,8 @@ echo "MINIO_ROOT_USER=[$MINIO_ROOT_USER]"
 
 
 
-mc alias set targetted_minio ${MINIO_ENDPOINT} "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
-mc ping ${MINIO_ENDPOINT}
-mc ping targetted_minio
+mc alias set targetted_minio http://localhost:9000 "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
+# mc ping targetted_minio
 
 mc mb targetted_minio/minio-test-bucket
 mc cp ./test.txt targetted_minio/minio-test-bucket

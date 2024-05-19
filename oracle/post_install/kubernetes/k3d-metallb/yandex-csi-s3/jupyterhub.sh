@@ -24,15 +24,7 @@ export JUP_CUSTOM_IMG="${JUP_CUSTOM_IMG_NAME}:${JUP_CUSTOM_IMG_TAG}"
 docker tag "${JUP_CUSTOM_IMG}" "localhost:5001/${JUP_CUSTOM_IMG}"
 docker push "localhost:5001/${JUP_CUSTOM_IMG}"
 
-cat <<EOF >./config.yaml
-singleuser:
-  extraEnv:
-    JUPYTER_ALLOW_INSECURE_WRITES: "true"
-  storage:
-    capacity: 2Gi
-    dynamic:
-      storageClass: csi-s3
-EOF
+
 
 cat <<EOF >./config.yaml
 singleuser:
@@ -49,11 +41,12 @@ singleuser:
   extraEnv:
     JUPYTER_ALLOW_INSECURE_WRITES: "true"
   storage:
+    homeMountPath: /home/jovyan/workspace
     capacity: 2Gi
     dynamic:
       storageClass: csi-s3
 EOF
-
+# https://z2jh.jupyter.org/en/stable/resources/reference.html#singleuser-storage-homemountpath
 
 
 helm upgrade --cleanup-on-fail \
@@ -75,16 +68,6 @@ exit 0
 
 cat <<EOF >./config.yaml
 singleuser:
-  image:
-    # You should replace the "latest" tag with a fixed version from:
-    # https://hub.docker.com/r/jupyter/datascience-notebook/tags/
-    # Inspect the Dockerfile at:
-    # https://github.com/jupyter/docker-stacks/tree/HEAD/datascience-notebook/Dockerfile
-    name: localhost:5001/decoderleco/deno-jupyter
-    tag: 0.0.1-alpha-aarch64
-  # 'cmd: null' allows the custom CMD of the Jupyter docker-stacks to be used
-  # which performs further customization on startup.
-  cmd: null
   extraEnv:
     JUPYTER_ALLOW_INSECURE_WRITES: "true"
   storage:
