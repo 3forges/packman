@@ -565,3 +565,100 @@ AHH MAIS ISIII C EST BON C EST JUSTE QUE JE REGARDAIS PAS DANS LE BON BUCKETTTT!
 ![ds jupyterhub](./images/cayestttttcbonnnnnnnn_ds_jupyterhub.PNG)
 
 ![ds minio](./images/cayestttttcbonnnnnnnn.PNG)
+
+
+
+Logs of the hub when I set `singleuser.cmd: null` in `values.yaml`/`config.yaml` (there my container works with its start command, but it stays stuck at the login stage) of the Helm Chart:
+
+```bash
+ubuntu@DecoderLecoCadeauBOB:~/jupyterhub_custom$ kubectl -n decoderleco logs pod/hub-7887df5bc4-m9295
+Loading /usr/local/etc/jupyterhub/secret/values.yaml
+No config at /usr/local/etc/jupyterhub/existing-secret/values.yaml
+Loading extra config: myConfig.py
+[I 2024-05-19 16:26:51.094 JupyterHub app:2885] Running JupyterHub version 4.1.5
+[I 2024-05-19 16:26:51.094 JupyterHub app:2915] Using Authenticator: jupyterhub.auth.DummyAuthenticator-4.1.5
+[I 2024-05-19 16:26:51.094 JupyterHub app:2915] Using Spawner: kubespawner.spawner.KubeSpawner-6.2.0
+[I 2024-05-19 16:26:51.094 JupyterHub app:2915] Using Proxy: jupyterhub.proxy.ConfigurableHTTPProxy-4.1.5
+[I 2024-05-19 16:26:51.114 alembic.runtime.migration migration:216] Context impl SQLiteImpl.
+[I 2024-05-19 16:26:51.114 alembic.runtime.migration migration:219] Will assume non-transactional DDL.
+[I 2024-05-19 16:26:51.123 alembic.runtime.migration migration:622] Running stamp_revision  -> 0eee8c825d24
+[I 2024-05-19 16:26:51.137 alembic.runtime.migration migration:216] Context impl SQLiteImpl.
+[I 2024-05-19 16:26:51.137 alembic.runtime.migration migration:219] Will assume non-transactional DDL.
+[I 2024-05-19 16:26:51.283 JupyterHub roles:173] Role jupyterhub-idle-culler added to database
+[I 2024-05-19 16:26:51.288 JupyterHub app:2005] Not using allowed_users. Any authenticated user will be allowed.
+[I 2024-05-19 16:26:51.330 JupyterHub app:2954] Initialized 0 spawners in 0.002 seconds
+[I 2024-05-19 16:26:51.334 JupyterHub metrics:279] Found 0 active users in the last ActiveUserPeriods.twenty_four_hours
+[I 2024-05-19 16:26:51.335 JupyterHub metrics:279] Found 0 active users in the last ActiveUserPeriods.seven_days
+[I 2024-05-19 16:26:51.335 JupyterHub metrics:279] Found 0 active users in the last ActiveUserPeriods.thirty_days
+[I 2024-05-19 16:26:51.335 JupyterHub app:3168] Not starting proxy
+[I 2024-05-19 16:26:51.343 JupyterHub app:3204] Hub API listening on http://:8081/hub/
+[I 2024-05-19 16:26:51.343 JupyterHub app:3206] Private Hub API connect url http://hub:8081/hub/
+[I 2024-05-19 16:26:51.343 JupyterHub app:3215] Starting managed service jupyterhub-idle-culler
+[I 2024-05-19 16:26:51.343 JupyterHub service:386] Starting service 'jupyterhub-idle-culler': ['python3', '-m', 'jupyterhub_idle_culler', '--url=http://localhost:8081/hub/api', '--timeout=3600', '--cull-every=600', '--concurrency=10']
+[I 2024-05-19 16:26:51.344 JupyterHub service:134] Spawning python3 -m jupyterhub_idle_culler --url=http://localhost:8081/hub/api --timeout=3600 --cull-every=600 --concurrency=10
+[I 2024-05-19 16:26:51.347 JupyterHub proxy:478] Adding route for Hub: / => http://hub:8081
+[I 2024-05-19 16:26:51.350 JupyterHub app:3273] JupyterHub is now running, internal Hub API at http://hub:8081/hub/
+[I 2024-05-19 16:26:51.458 JupyterHub log:192] 200 GET /hub/api/ (jupyterhub-idle-culler@::1) 9.21ms
+[I 2024-05-19 16:26:51.466 JupyterHub log:192] 200 GET /hub/api/users?state=[secret] (jupyterhub-idle-culler@::1) 6.18ms
+[I 2024-05-19 16:27:19.594 JupyterHub log:192] 302 GET / -> /hub/ (@::ffff:172.18.0.5) 0.62ms
+[W 2024-05-19 16:27:19.667 JupyterHub base:478] Invalid or expired cookie token
+[I 2024-05-19 16:27:19.668 JupyterHub log:192] 302 GET /hub/ -> /hub/login?next=%2Fhub%2F (@::ffff:172.18.0.5) 1.09ms
+[I 2024-05-19 16:27:19.933 JupyterHub _xsrf_utils:125] Setting new xsrf cookie for b'3b2bbbd181c24189a8bf5cf933e10085:fop0jHAWzvvTVyfmW_muWlSGHMi5vF0pA54WrFL2AjQ=' {'path': '/hub/', 'max_age': 3600}
+[I 2024-05-19 16:27:19.954 JupyterHub log:192] 200 GET /hub/login?next=%2Fhub%2F (@::ffff:172.18.0.5) 21.95ms
+[I 2024-05-19 16:27:26.404 JupyterHub roles:239] Adding role user for User: pierre
+[I 2024-05-19 16:27:26.421 JupyterHub _xsrf_utils:125] Setting new xsrf cookie for b'3b2bbbd181c24189a8bf5cf933e10085:e1418650370e40b09650c7ac2274c9f1' {'path': '/hub/'}
+[I 2024-05-19 16:27:26.422 JupyterHub base:937] User logged in: pierre
+[I 2024-05-19 16:27:26.422 JupyterHub log:192] 302 POST /hub/login?next=%2Fhub%2F -> /hub/ (pierre@::ffff:172.18.0.5) 24.96ms
+[I 2024-05-19 16:27:26.544 JupyterHub log:192] 302 GET /hub/ -> /hub/spawn (pierre@::ffff:172.18.0.5) 12.61ms
+[I 2024-05-19 16:27:26.615 JupyterHub provider:660] Creating oauth client jupyterhub-user-pierre
+[I 2024-05-19 16:27:26.636 JupyterHub log:192] 302 GET /hub/spawn -> /hub/spawn-pending/pierre (pierre@::ffff:172.18.0.5) 39.20ms
+[I 2024-05-19 16:27:26.647 JupyterHub reflector:282] watching for pods with label selector='component=singleuser-server' in namespace decoderleco
+[I 2024-05-19 16:27:26.658 JupyterHub reflector:282] watching for events with field selector='involvedObject.kind=Pod' in namespace decoderleco
+[I 2024-05-19 16:27:26.661 JupyterHub spawner:2551] Attempting to create pvc claim-pierre, with timeout 3
+[I 2024-05-19 16:27:26.689 JupyterHub spawner:2567] PVC claim-pierre already exists, so did not create new pvc.
+[I 2024-05-19 16:27:26.693 JupyterHub spawner:2511] Attempting to create pod jupyter-pierre, with timeout 3
+[I 2024-05-19 16:27:26.709 JupyterHub pages:399] pierre is pending spawn
+[I 2024-05-19 16:27:26.712 JupyterHub log:192] 200 GET /hub/spawn-pending/pierre (pierre@::ffff:172.18.0.5) 4.89ms
+[W 2024-05-19 16:32:26.634 JupyterHub user:879] pierre's server failed to start in 300 seconds, giving up.
+
+    Common causes of this timeout, and debugging tips:
+
+    1. Everything is working, but it took too long.
+       To fix: increase `Spawner.start_timeout` configuration
+       to a number of seconds that is enough for spawners to finish starting.
+    2. The server didn't finish starting,
+       or it crashed due to a configuration issue.
+       Check the single-user server's logs for hints at what needs fixing.
+
+[I 2024-05-19 16:32:26.635 JupyterHub spawner:2849] Deleting pod decoderleco/jupyter-pierre
+[E 2024-05-19 16:32:28.654 JupyterHub spawner:2810] Pod decoderleco/jupyter-pierre never showed up in reflector, restarting pod reflector
+[E 2024-05-19 16:32:28.654 JupyterHub spawner:2814] Pods: []
+[E 2024-05-19 16:32:28.656 JupyterHub gen:630] Exception in Future <Task finished name='Task-97' coro=<KubeSpawner._start() done, defined at /usr/local/lib/python3.11/site-packages/kubespawner/spawner.py:2663> exception=TimeoutError('pod decoderleco/jupyter-pierre did not start in 300 seconds!')> after timeout
+    Traceback (most recent call last):
+      File "/usr/local/lib/python3.11/site-packages/tornado/gen.py", line 625, in error_callback
+        future.result()
+      File "/usr/local/lib/python3.11/site-packages/kubespawner/spawner.py", line 2801, in _start
+        await exponential_backoff(
+      File "/usr/local/lib/python3.11/site-packages/jupyterhub/utils.py", line 257, in exponential_backoff
+        raise asyncio.TimeoutError(fail_message)
+    TimeoutError: pod decoderleco/jupyter-pierre did not start in 300 seconds!
+
+[I 2024-05-19 16:32:28.659 JupyterHub reflector:282] watching for pods with label selector='component=singleuser-server' in namespace decoderleco
+[I 2024-05-19 16:32:28.661 JupyterHub reflector:378] pods watcher stopped: outer
+[W 2024-05-19 16:32:28.661 JupyterHub reflector:380] pods watcher finished
+[E 2024-05-19 16:32:30.223 JupyterHub gen:630] Exception in Future <Task finished name='Task-96' coro=<BaseHandler.spawn_single_user.<locals>.finish_user_spawn() done, defined at /usr/local/lib/python3.11/site-packages/jupyterhub/handlers/base.py:1081> exception=TimeoutError('Timeout')> after timeout
+    Traceback (most recent call last):
+      File "/usr/local/lib/python3.11/site-packages/tornado/gen.py", line 625, in error_callback
+        future.result()
+      File "/usr/local/lib/python3.11/site-packages/jupyterhub/handlers/base.py", line 1088, in finish_user_spawn
+        await spawn_future
+      File "/usr/local/lib/python3.11/site-packages/jupyterhub/user.py", line 905, in spawn
+        raise e
+      File "/usr/local/lib/python3.11/site-packages/jupyterhub/user.py", line 801, in spawn
+        url = await gen.with_timeout(timedelta(seconds=spawner.start_timeout), f)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    TimeoutError: Timeout
+
+[I 2024-05-19 16:32:30.225 JupyterHub log:192] 200 GET /hub/api/users/pierre/server/progress?_xsrf=[secret] (pierre@::ffff:172.18.0.5) 303265.59ms
+
+```
