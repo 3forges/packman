@@ -25,7 +25,8 @@ export JUP_CUSTOM_IMG="${JUP_CUSTOM_IMG_NAME}:${JUP_CUSTOM_IMG_TAG}"
 docker tag "${JUP_CUSTOM_IMG}" "localhost:5001/${JUP_CUSTOM_IMG}-2"
 docker push "localhost:5001/${JUP_CUSTOM_IMG}-2"
 
-
+docker rmi localhost:5001/${JUP_CUSTOM_IMG_NAME}:${JUP_CUSTOM_IMG_TAG}-2
+docker rmi ${JUP_CUSTOM_IMG} --force || true
 
 # IMPORTANT note: most of the time the
 # helm times out, and just waiting a bit
@@ -44,6 +45,19 @@ docker pull --platform linux/arm64 ${OTHER_NB_IMG_GUN}
 docker tag ${OTHER_NB_IMG_GUN} ${OTHER_NB_IMG_GUN_TO_PUSH}
 docker push ${OTHER_NB_IMG_GUN_TO_PUSH}
 
+docker rmi ${OTHER_NB_IMG_GUN_TO_PUSH} --force
+
+export OTHER_NB_IMG_NAME="jupyter/datascience-notebook"
+export OTHER_NB_IMG_TAG="latest"
+export OTHER_NB_IMG_GUN="${OTHER_NB_IMG_NAME}:${OTHER_NB_IMG_TAG}"
+export OTHER_NB_IMG_GUN_TO_PUSH="localhost:5001/${OTHER_NB_IMG_NAME}:${OTHER_NB_IMG_TAG}"
+
+docker pull --platform linux/arm64 ${OTHER_NB_IMG_GUN}
+docker tag ${OTHER_NB_IMG_GUN} ${OTHER_NB_IMG_GUN_TO_PUSH}
+docker push ${OTHER_NB_IMG_GUN_TO_PUSH}
+
+docker rmi ${OTHER_NB_IMG_GUN_TO_PUSH} --force
+
 cat <<EOF >./config.yaml
 singleuser:
   # Defines the default image
@@ -54,6 +68,10 @@ singleuser:
     - display_name: "Minimal environment"
       description: "To avoid too much bells and whistles: Python."
       default: true
+    - display_name: "Décoder l'éco Data Science environment"
+      description: "There you will have a notebook with R, Python, Julia."
+      kubespawner_override:
+        image: localhost:5001/docker.io/jupyter/datascience-notebook:latest
     - display_name: "Python/R/Deno/Polars Décoder l'éco environment"
       description: "There you will have a notebook with several kernels available, among which you will have the Deno/Polars specific environment."
       kubespawner_override:

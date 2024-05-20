@@ -28,5 +28,5 @@ chmod +x ./*.k3d.sh
 ./provision.sh
 # ./provision.k3d.sh
 
-./troubleshoot.sh
+# ./troubleshoot.sh
 # ./troubleshoot.k3d.sh

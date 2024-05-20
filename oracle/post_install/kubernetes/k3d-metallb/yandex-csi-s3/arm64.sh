@@ -69,6 +69,7 @@ export CSI_DRIVER_GUN_TO_DEPLOY="localhost:5001/${REBUILT_CSI_DRIVER_GUN}-arm64"
 docker tag "${REBUILT_CSI_DRIVER_GUN}" "${CSI_DRIVER_GUN_TO_DEPLOY}"
 
 docker push "${CSI_DRIVER_GUN_TO_DEPLOY}"
+docker rmi "${CSI_DRIVER_GUN_TO_DEPLOY}" --force
 
 # --
 # - second image: the CSI provisioner
@@ -82,6 +83,7 @@ docker tag "${PROVISIONER_IMG_GUN}" "${CSI_PROVISIONER_GUN_TO_DEPLOY}"
 
 docker push "${CSI_PROVISIONER_GUN_TO_DEPLOY}"
 
+docker rmi "${CSI_PROVISIONER_GUN_TO_DEPLOY}" --force
 
 # --
 # - third image: the CSI registrar
@@ -95,7 +97,7 @@ docker tag "${REGISTRAR_IMG_GUN}" "${CSI_REGISTRAR_GUN_TO_DEPLOY}"
 
 docker push "${CSI_REGISTRAR_GUN_TO_DEPLOY}"
 
-
+docker rmi "${CSI_REGISTRAR_GUN_TO_DEPLOY}" --force
 # --- # --- # --- 
 # --- # --- # --- 
 # ---  And re-deploy the helm Chart
