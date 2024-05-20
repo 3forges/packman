@@ -27,6 +27,87 @@ docker push "localhost:5001/${JUP_CUSTOM_IMG}-2"
 
 
 
+# IMPORTANT note: most of the time the
+# helm times out, and just waiting a bit
+# and re-running the helm upgrade is enough, so
+# I think just increasing timeout or configuring
+# the helm chart so that it takes time to pre-pull 
+# the images before spawning the jupyterhub stack
+# would do it.
+
+export OTHER_NB_IMG_NAME="jupyter/minimal-notebook"
+export OTHER_NB_IMG_TAG="latest"
+export OTHER_NB_IMG_GUN="${OTHER_NB_IMG_NAME}:${OTHER_NB_IMG_TAG}"
+export OTHER_NB_IMG_GUN_TO_PUSH="localhost:5001/${OTHER_NB_IMG_NAME}:${OTHER_NB_IMG_TAG}"
+
+
+cat <<EOF >./config.yaml
+singleuser:
+  # Defines the default image
+  image:
+    name: localhost:5001/jupyter/minimal-notebook
+    tag: latest
+  profileList:
+    - display_name: "Minimal environment"
+      description: "To avoid too much bells and whistles: Python."
+      default: true
+    - display_name: "Python/R/Deno/Polars Décoder l'éco environment"
+      description: "There you will have a notebook with several kernels available, among which you will have the Deno/Polars specific environment."
+      kubespawner_override:
+        image: localhost:5001/${JUP_CUSTOM_IMG_NAME}:${JUP_CUSTOM_IMG_TAG}-2
+        # c.KubeSpawner.args = '--unstable=true --notebook-dir=/home/jovyan/workspace'
+        args: '--unstable=true --notebook-dir=/home/jovyan/workspace'
+        # cmd: null
+        # cmd: 'jupyter lab --unstable=true --ip=0.0.0.0 --NotebookApp.base_url="\${JUPYTERHUB_SERVICE_PREFIX}" --NotebookApp.token="" --NotebookApp.password="chaillot" --notebook-dir="/home/jovyan/workspace"'
+        # cmd: null
+        # cmd: 'export PATH="\$HOME/.local/bin:\$PATH" && jupyter lab --unstable=true --ip=0.0.0.0 --NotebookApp.base_url="${JUPYTERHUB_SERVICE_PREFIX}" --NotebookApp.token="" --NotebookApp.password="chaillot"'
+        cmd: '/run/start.debug.sh'
+  extraEnv:
+    JUPYTER_ALLOW_INSECURE_WRITES: "true"
+  storage:
+    homeMountPath: /home/jovyan/workspace
+    capacity: 2Gi
+    dynamic:
+      storageClass: csi-s3
+
+EOF
+
+# https://z2jh.jupyter.org/en/stable/resources/reference.html#singleuser-storage-homemountpath
+
+
+helm upgrade --cleanup-on-fail \
+  --install decoderleco-jupyter jupyterhub/jupyterhub \
+  -n decoderleco \
+  --create-namespace \
+  --version=3.3.7 \
+  --values config.yaml
+
+# helm delete decoderleco-jupyter -n decoderleco
+
+kubectl get all -n decoderleco
+
+
+exit 0
+
+# celui ci-dessus il est encore un peu trop gros (trop d'image possibles)
+
+# - # # - # # - # # - # # - # # - # # - # # - #
+# - #
+# - # Déjà dès que je fais un docker pull de l'image ci desous il me sort un no space left on device:
+# failed to register layer: write /opt/conda/libexec/gcc/aarch64-conda-linux-gnu/13.2.0/lto1: no space left on device
+# - #
+# - #
+
+export OTHER_NB_IMG_NAME="jupyter/datascience-notebook"
+export OTHER_NB_IMG_TAG="latest"
+export OTHER_NB_IMG_GUN="${OTHER_NB_IMG_NAME}:${OTHER_NB_IMG_TAG}"
+export OTHER_NB_IMG_GUN_TO_PUSH="localhost:5001/${OTHER_NB_IMG_NAME}:${OTHER_NB_IMG_TAG}"
+
+docker pull --platform linux/arm64 ${OTHER_NB_IMG_GUN}
+docker tag ${OTHER_NB_IMG_GUN} ${OTHER_NB_IMG_GUN_TO_PUSH}
+docker push ${OTHER_NB_IMG_GUN_TO_PUSH}
+
+
 cat <<EOF >./config.yaml
 singleuser:
   # Defines the default image
@@ -46,14 +127,15 @@ singleuser:
     - display_name: "Datascience environment"
       description: "If you want the additional bells and whistles: Python, R, and Julia."
       kubespawner_override:
-        image: jupyter/datascience-notebook:2343e33dec46
+        # image: localhost:5001/jupyter/datascience-notebook:2343e33dec46
+        image: localhost:5001/jupyter/datascience-notebook:latest
     - display_name: "Spark environment"
       description: "The Jupyter Stacks spark image!"
       kubespawner_override:
-        image: jupyter/all-spark-notebook:2343e33dec46
+        image: localhost:5001/jupyter/all-spark-notebook:2343e33dec46
     - display_name: "Learning Data Science"
       description: "Datascience Environment with Sample Notebooks"
-#       kubespawner_override:
+      kubespawner_override:
         image: jupyter/datascience-notebook:2343e33dec46
         lifecycle_hooks:
           postStart:
@@ -90,34 +172,4 @@ singleuser:
       # # c.KubeSpawner.args = '--unstable=true --notebook-dir=/home/jovyan/workspace'
       # # c.KubeSpawner.notebook_dir = '/home/jovyan/workspace'
 EOF
-# https://z2jh.jupyter.org/en/stable/resources/reference.html#singleuser-storage-homemountpath
-
-
-helm upgrade --cleanup-on-fail \
-  --install decoderleco-jupyter jupyterhub/jupyterhub \
-  -n decoderleco \
-  --create-namespace \
-  --version=3.3.7 \
-  --values config.yaml
-
-# helm delete decoderleco-jupyter -n decoderleco
-
-kubectl get all -n decoderleco
-
-
-exit 0
-
-# la custom image doit être adaptée pour jupyterhub 
-
-
-cat <<EOF >./config.yaml
-singleuser:
-  extraEnv:
-    JUPYTER_ALLOW_INSECURE_WRITES: "true"
-  storage:
-    capacity: 2Gi
-    dynamic:
-      storageClass: csi-s3
-EOF
-
 
