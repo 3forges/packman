@@ -40,6 +40,9 @@ export OTHER_NB_IMG_TAG="latest"
 export OTHER_NB_IMG_GUN="${OTHER_NB_IMG_NAME}:${OTHER_NB_IMG_TAG}"
 export OTHER_NB_IMG_GUN_TO_PUSH="localhost:5001/${OTHER_NB_IMG_NAME}:${OTHER_NB_IMG_TAG}"
 
+docker pull --platform linux/arm64 ${OTHER_NB_IMG_GUN}
+docker tag ${OTHER_NB_IMG_GUN} ${OTHER_NB_IMG_GUN_TO_PUSH}
+docker push ${OTHER_NB_IMG_GUN_TO_PUSH}
 
 cat <<EOF >./config.yaml
 singleuser:
