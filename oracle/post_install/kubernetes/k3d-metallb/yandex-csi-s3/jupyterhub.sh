@@ -22,10 +22,10 @@ export JUP_CUSTOM_IMG_TAG="0.0.1-alpha-aarch64-hub"
 
 export JUP_CUSTOM_IMG="${JUP_CUSTOM_IMG_NAME}:${JUP_CUSTOM_IMG_TAG}"
 
-docker tag "${JUP_CUSTOM_IMG}" "localhost:5001/${JUP_CUSTOM_IMG}-2"
-docker push "localhost:5001/${JUP_CUSTOM_IMG}-2"
+docker tag "${JUP_CUSTOM_IMG}" "localhost:5001/${JUP_CUSTOM_IMG}"
+docker push "localhost:5001/${JUP_CUSTOM_IMG}"
 
-docker rmi localhost:5001/${JUP_CUSTOM_IMG_NAME}:${JUP_CUSTOM_IMG_TAG}-2
+docker rmi localhost:5001/${JUP_CUSTOM_IMG_NAME}:${JUP_CUSTOM_IMG_TAG}
 docker rmi ${JUP_CUSTOM_IMG} --force || true
 
 # IMPORTANT note: most of the time the
@@ -72,17 +72,17 @@ singleuser:
       description: "There you will have a notebook with R, Python, Julia."
       kubespawner_override:
         image: localhost:5001/docker.io/jupyter/datascience-notebook:latest
-    - display_name: "Python/R/Deno/Polars Décoder l'éco environment"
-      description: "There you will have a notebook with several kernels available, among which you will have the Deno/Polars specific environment."
+    - display_name: "Deno/Polars Décoder l'éco environment"
+      description: "There you will have a notebook with a deno (typescript) kernels available. Using Deno, you will be able to run Polars in TypeScript, https://pola-rs.github.io/nodejs-polars/."
       kubespawner_override:
-        image: localhost:5001/${JUP_CUSTOM_IMG_NAME}:${JUP_CUSTOM_IMG_TAG}-2
+        image: localhost:5001/${JUP_CUSTOM_IMG_NAME}:${JUP_CUSTOM_IMG_TAG}
         # c.KubeSpawner.args = '--unstable=true --notebook-dir=/home/jovyan/workspace'
         args: '--unstable=true --notebook-dir=/home/jovyan/workspace'
         # cmd: null
         # cmd: 'jupyter lab --unstable=true --ip=0.0.0.0 --NotebookApp.base_url="\${JUPYTERHUB_SERVICE_PREFIX}" --NotebookApp.token="" --NotebookApp.password="chaillot" --notebook-dir="/home/jovyan/workspace"'
         # cmd: null
         # cmd: 'export PATH="\$HOME/.local/bin:\$PATH" && jupyter lab --unstable=true --ip=0.0.0.0 --NotebookApp.base_url="${JUPYTERHUB_SERVICE_PREFIX}" --NotebookApp.token="" --NotebookApp.password="chaillot"'
-        cmd: '/run/start.debug.sh'
+        # cmd: '/run/start.debug.sh'
   extraEnv:
     JUPYTER_ALLOW_INSECURE_WRITES: "true"
   storage:
@@ -142,7 +142,7 @@ singleuser:
     - display_name: "Python/R/Deno/Polars Décoder l'éco environment"
       description: "There you will have a notebook with several kernels available, among which you will have the Deno/Polars specific environment."
       kubespawner_override:
-        image: localhost:5001/${JUP_CUSTOM_IMG_NAME}:${JUP_CUSTOM_IMG_TAG}-2
+        image: localhost:5001/${JUP_CUSTOM_IMG_NAME}:${JUP_CUSTOM_IMG_TAG}
         # c.KubeSpawner.args = '--unstable=true --notebook-dir=/home/jovyan/workspace'
         args: '--unstable=true --notebook-dir=/home/jovyan/workspace'
     - display_name: "Datascience environment"
@@ -172,7 +172,7 @@ singleuser:
   #   # Inspect the Dockerfile at:
   #   # https://github.com/jupyter/docker-stacks/tree/HEAD/datascience-notebook/Dockerfile
   #   name: localhost:5001/${JUP_CUSTOM_IMG_NAME}
-  #   tag: ${JUP_CUSTOM_IMG_TAG}-2
+  #   tag: ${JUP_CUSTOM_IMG_TAG}
   # 'cmd: null' allows the custom CMD of the Jupyter docker-stacks to be used
   # which performs further customization on startup.
   # cmd: null
