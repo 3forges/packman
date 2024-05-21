@@ -247,12 +247,10 @@ kubectl apply -f s3-csi-driver-tests/
 
 kubectl -n s3-csi-driver-tests exec pod/csi-s3-test-nginx -- sh -c 'ls -alh /usr/share/nginx/html/s3'
 
-figlet '---'
 echo 'kubectl get all -n s3-csi-driver-tests'
 figlet "Holy Molly S3 CSI DRIVER works!"
-figlet '---'
 echo 'kubectl get all -n s3-csi-driver-tests'
-figlet '---'
+
 
 # figlet 'Jupyterhub'
 # see ./jupterhub.sh
