@@ -71,7 +71,7 @@ singleuser:
     - display_name: "Décoder l'éco Data Science environment"
       description: "There you will have a notebook with R, Python, Julia."
       kubespawner_override:
-        image: localhost:5001/docker.io/jupyter/datascience-notebook:latest
+        image: localhost:5001/jupyter/datascience-notebook:latest
     - display_name: "Deno/Polars Décoder l'éco environment"
       description: "There you will have a notebook with a deno (typescript) kernels available. Using Deno, you will be able to run Polars in TypeScript, https://pola-rs.github.io/nodejs-polars/."
       kubespawner_override:
