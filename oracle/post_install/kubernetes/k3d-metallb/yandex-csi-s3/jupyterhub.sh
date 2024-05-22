@@ -60,6 +60,20 @@ docker rmi ${OTHER_NB_IMG_GUN_TO_PUSH} --force
 
 cat <<EOF >./config.yaml
 singleuser:
+# see https://community.ovh.com/t/pv-are-not-mounted-with-correct-permissions-inside-pods/49379/2
+# >>> An init container might be the solution, yet this one does not work for now.
+#   initContainers:
+#     - name: permissions-fixer
+#       image: alpine
+#       securityContext:
+#         runAsUser: 0
+#       volumeMounts:  # mount user persistent volume (based on volumeNameTemplate)
+#         - name: volume-{username}{servername}
+#           mountPath: /home/jovyan
+#       command:
+#         - sh
+#         - -c
+#         - (chown 1000:100 /home/jovyan; chmod 0755 /home/jovyan;)
   # Defines the default image
   image:
     name: localhost:5001/jupyter/minimal-notebook
@@ -77,20 +91,25 @@ singleuser:
       kubespawner_override:
         image: localhost:5001/${JUP_CUSTOM_IMG_NAME}:${JUP_CUSTOM_IMG_TAG}
         # c.KubeSpawner.args = '--unstable=true --notebook-dir=/home/jovyan/workspace'
-        args: '--unstable=true --notebook-dir=/home/jovyan/workspace'
+        args: '--allow-root --unstable=true --notebook-dir=/home/jovyan/workspace'
         # cmd: null
         # cmd: 'jupyter lab --unstable=true --ip=0.0.0.0 --NotebookApp.base_url="\${JUPYTERHUB_SERVICE_PREFIX}" --NotebookApp.token="" --NotebookApp.password="chaillot" --notebook-dir="/home/jovyan/workspace"'
         # cmd: null
         # cmd: 'export PATH="\$HOME/.local/bin:\$PATH" && jupyter lab --unstable=true --ip=0.0.0.0 --NotebookApp.base_url="${JUPYTERHUB_SERVICE_PREFIX}" --NotebookApp.token="" --NotebookApp.password="chaillot"'
         # cmd: '/run/start.debug.sh'
-        container_security_context:
-          runAsGroup: 1000
-          runAsUser: 1000
-        podSecurityContext:
-          fsGroup: 1000
-          runAsUser: 1000
-          runAsGroup: 1000
-          fsGroupChangePolicy: "OnRootMismatch" 
+        lifecycle_hooks:
+          postStart:
+            exec:
+              command:
+                - "bash"
+                - "-c"
+                - >
+                  # gitpuller https://github.com/decoder-leco/decoderleco_deces_europe_reloaded.git feature/kr/decoderleco/deces_europe/jupyter/rewrite /home/jovyan/deno-samples;
+                  git clone https://github.com/decoder-leco/decoderleco_deces_europe_reloaded.git /home/jovyan/deno-samples;
+                  cd /home/jovyan/deno-samples && git checkout  feature/kr/decoderleco/deces_europe/jupyter/rewrite
+                  mkdir -p /home/jovyan/workspace/samples
+                  cp -fR /home/jovyan/deno-samples/* /home/jovyan/workspace/samples/
+                  echo 'created by lifecyclehooks.postStart' > /home/jovyan/something.readme.md
   extraEnv:
     JUPYTER_ALLOW_INSECURE_WRITES: "true"
   storage:
