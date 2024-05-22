@@ -60,21 +60,6 @@ docker rmi ${OTHER_NB_IMG_GUN_TO_PUSH} --force
 
 cat <<EOF >./config.yaml
 singleuser:
-# see https://community.ovh.com/t/pv-are-not-mounted-with-correct-permissions-inside-pods/49379/2
-# >>> An init container might be the solution, yet this one does not work for now.
-#   initContainers:
-#     - name: permissions-fixer
-#       image: alpine
-#       securityContext:
-#         runAsUser: 0
-#       volumeMounts:  # mount user persistent volume (based on volumeNameTemplate)
-#         - name: volume-{username}{servername}
-#           mountPath: /home/jovyan
-#       command:
-#         - sh
-#         - -c
-#         - (chown 1000:100 /home/jovyan; chmod 0755 /home/jovyan;)
-  # Defines the default image
   image:
     name: localhost:5001/jupyter/minimal-notebook
     tag: latest
@@ -91,25 +76,12 @@ singleuser:
       kubespawner_override:
         image: localhost:5001/${JUP_CUSTOM_IMG_NAME}:${JUP_CUSTOM_IMG_TAG}
         # c.KubeSpawner.args = '--unstable=true --notebook-dir=/home/jovyan/workspace'
-        args: '--allow-root --unstable=true --notebook-dir=/home/jovyan/workspace'
+        args: ' --unstable=true --notebook-dir=/home/jovyan/workspace'
         # cmd: null
         # cmd: 'jupyter lab --unstable=true --ip=0.0.0.0 --NotebookApp.base_url="\${JUPYTERHUB_SERVICE_PREFIX}" --NotebookApp.token="" --NotebookApp.password="chaillot" --notebook-dir="/home/jovyan/workspace"'
         # cmd: null
         # cmd: 'export PATH="\$HOME/.local/bin:\$PATH" && jupyter lab --unstable=true --ip=0.0.0.0 --NotebookApp.base_url="${JUPYTERHUB_SERVICE_PREFIX}" --NotebookApp.token="" --NotebookApp.password="chaillot"'
         # cmd: '/run/start.debug.sh'
-        lifecycle_hooks:
-          postStart:
-            exec:
-              command:
-                - "bash"
-                - "-c"
-                - >
-                  # gitpuller https://github.com/decoder-leco/decoderleco_deces_europe_reloaded.git feature/kr/decoderleco/deces_europe/jupyter/rewrite /home/jovyan/deno-samples;
-                  git clone https://github.com/decoder-leco/decoderleco_deces_europe_reloaded.git /home/jovyan/deno-samples;
-                  cd /home/jovyan/deno-samples && git checkout  feature/kr/decoderleco/deces_europe/jupyter/rewrite
-                  mkdir -p /home/jovyan/workspace/samples
-                  cp -fR /home/jovyan/deno-samples/* /home/jovyan/workspace/samples/
-                  echo 'created by lifecyclehooks.postStart' > /home/jovyan/something.readme.md
   extraEnv:
     JUPYTER_ALLOW_INSECURE_WRITES: "true"
   storage:
@@ -146,8 +118,6 @@ kubectl get all -n decoderleco
 
 exit 0
 
-# celui ci-dessus il est encore un peu trop gros (trop d'image possibles)
-
 # - # # - # # - # # - # # - # # - # # - # # - #
 # - #
 # - # Déjà dès que je fais un docker pull de l'image ci desous il me sort un no space left on device:
@@ -167,51 +137,79 @@ docker push ${OTHER_NB_IMG_GUN_TO_PUSH}
 
 cat <<EOF >./config.yaml
 singleuser:
+# see https://community.ovh.com/t/pv-are-not-mounted-with-correct-permissions-inside-pods/49379/2
+# >>> An init container might be the solution, yet this one does not work for now.
+# $ kubectl -n decoderleco logs pod/jupyter-castafiore -c permissions-fixer
+# chown: /home/jovyan: Not supported
+# chmod: /home/jovyan: Not supported
+  initContainers:
+    - name: permissions-fixer
+      image: alpine
+      securityContext:
+        runAsUser: 0
+      volumeMounts:  # mount user persistent volume (based on volumeNameTemplate)
+        # - name: volume-{username}{servername}
+        - name: volume-{username}
+          mountPath: /home/jovyan
+      command:
+        - sh
+        - -c
+        - (chown 1000:100 /home/jovyan; chmod 0755 /home/jovyan;)
   # Defines the default image
   image:
-    name: jupyter/minimal-notebook
-    tag: 2343e33dec46
+    name: localhost:5001/jupyter/minimal-notebook
+    tag: latest
   profileList:
     - display_name: "Minimal environment"
       description: "To avoid too much bells and whistles: Python."
       default: true
-    - display_name: "Python/R/Deno/Polars Décoder l'éco environment"
-      description: "There you will have a notebook with several kernels available, among which you will have the Deno/Polars specific environment."
+    - display_name: "Décoder l'éco Data Science environment"
+      description: "There you will have a notebook with R, Python, Julia."
+      kubespawner_override:
+        image: localhost:5001/jupyter/datascience-notebook:latest
+    - display_name: "Deno/Polars Décoder l'éco environment"
+      description: "There you will have a notebook with a deno (typescript) kernels available. Using Deno, you will be able to run Polars in TypeScript, https://pola-rs.github.io/nodejs-polars/."
       kubespawner_override:
         image: localhost:5001/${JUP_CUSTOM_IMG_NAME}:${JUP_CUSTOM_IMG_TAG}
         # c.KubeSpawner.args = '--unstable=true --notebook-dir=/home/jovyan/workspace'
         args: '--unstable=true --notebook-dir=/home/jovyan/workspace'
-    - display_name: "Datascience environment"
-      description: "If you want the additional bells and whistles: Python, R, and Julia."
-      kubespawner_override:
-        # image: localhost:5001/jupyter/datascience-notebook:2343e33dec46
-        image: localhost:5001/jupyter/datascience-notebook:latest
-    - display_name: "Spark environment"
-      description: "The Jupyter Stacks spark image!"
-      kubespawner_override:
-        image: localhost:5001/jupyter/all-spark-notebook:2343e33dec46
-    - display_name: "Learning Data Science"
-      description: "Datascience Environment with Sample Notebooks"
-      kubespawner_override:
-        image: jupyter/datascience-notebook:2343e33dec46
+        # cmd: null
+        # cmd: 'jupyter lab --unstable=true --ip=0.0.0.0 --NotebookApp.base_url="\${JUPYTERHUB_SERVICE_PREFIX}" --NotebookApp.token="" --NotebookApp.password="chaillot" --notebook-dir="/home/jovyan/workspace"'
+        # cmd: null
+        # cmd: 'export PATH="\$HOME/.local/bin:\$PATH" && jupyter lab --unstable=true --ip=0.0.0.0 --NotebookApp.base_url="${JUPYTERHUB_SERVICE_PREFIX}" --NotebookApp.token="" --NotebookApp.password="chaillot"'
+        # cmd: '/run/start.debug.sh'
         lifecycle_hooks:
           postStart:
             exec:
               command:
-                - "sh"
+                - "bash"
                 - "-c"
                 - >
-                  gitpuller https://github.com/data-8/materials-fa17 master materials-fa;
-  # image:
-  #   # You should replace the "latest" tag with a fixed version from:
-  #   # https://hub.docker.com/r/jupyter/datascience-notebook/tags/
-  #   # Inspect the Dockerfile at:
-  #   # https://github.com/jupyter/docker-stacks/tree/HEAD/datascience-notebook/Dockerfile
-  #   name: localhost:5001/${JUP_CUSTOM_IMG_NAME}
-  #   tag: ${JUP_CUSTOM_IMG_TAG}
-  # 'cmd: null' allows the custom CMD of the Jupyter docker-stacks to be used
-  # which performs further customization on startup.
-  # cmd: null
+                  # gitpuller https://github.com/decoder-leco/decoderleco_deces_europe_reloaded.git feature/kr/decoderleco/deces_europe/jupyter/rewrite /home/jovyan/deno-samples;
+                  echo 'created by lifecyclehooks.postStart' > /home/jovyan/something.readme.md
+                  cd /home/jovyan
+                  cat <<EOF >./getSamples.sh
+                  if [ -d /home/jovyan/deno-samples ]; then
+                    rm -fr /home/jovyan/deno-samples
+                    mkdir -p /home/jovyan/deno-samples
+                  fi;
+                  if [ -d /home/jovyan/workspace/deno-samples ]; then
+                    rm -fr /home/jovyan/workspace/deno-samples
+                    mkdir -p /home/jovyan/workspace/deno-samples
+                  fi;
+                  if [ -d /home/jovyan/workspace/deno-samples2 ]; then
+                    rm -fr /home/jovyan/workspace/deno-samples2
+                    mkdir -p /home/jovyan/workspace/deno-samples2
+                  fi;
+                  git clone https://github.com/decoder-leco/decoderleco_deces_europe_reloaded.git /home/jovyan/deno-samples
+                  cd /home/jovyan/deno-samples
+                  git checkout feature/kr/decoderleco/deces_europe/jupyter/rewrite
+                  cp -fR /home/jovyan/deno-samples/* /home/jovyan/workspace/deno-samples/
+                  git checkout features/R/functions/to/nodejs-polars
+                  cp -fR /home/jovyan/deno-samples/* /home/jovyan/workspace/deno-samples2/
+                  EOF
+                  chmod +x *.sh
+                  echo 'alias getSamples="/home/jovyan/getSamples.sh"' | tee -a /home/jovyan/.bashrc | tee -a /home/jovyan/.shrc
   extraEnv:
     JUPYTER_ALLOW_INSECURE_WRITES: "true"
   storage:
@@ -219,14 +217,15 @@ singleuser:
     capacity: 2Gi
     dynamic:
       storageClass: csi-s3
-
-# # https://z2jh.jupyter.org/en/latest/resources/reference.html#hub-extraconfig
-# hub:
-#   extraConfig:
-#     myConfig.py: |
-      # c.Spawner.args = '--unstable=true --notebook-dir=/home/jovyan/workspace'
-      # # c.Spawner.notebook_dir = '/home/jovyan/workspace'
-      # # c.KubeSpawner.args = '--unstable=true --notebook-dir=/home/jovyan/workspace'
-      # # c.KubeSpawner.notebook_dir = '/home/jovyan/workspace'
+# ---
+# For the moment, I still have the issue that the volume is mounted with root ownership on the workspace folder, so it seems i can't git clone inside workspace folder, permission denied
+hub:
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroupChangePolicy: "OnRootMismatch" 
 EOF
-
+# https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html#kubespawner.KubeSpawner.container_security_context
+# https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html#kubespawner.KubeSpawner.pod_security_context
+# https://z2jh.jupyter.org/en/stable/resources/reference.html#singleuser-storage-homemountpath
