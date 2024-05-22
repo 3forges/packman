@@ -83,6 +83,9 @@ singleuser:
         # cmd: null
         # cmd: 'export PATH="\$HOME/.local/bin:\$PATH" && jupyter lab --unstable=true --ip=0.0.0.0 --NotebookApp.base_url="${JUPYTERHUB_SERVICE_PREFIX}" --NotebookApp.token="" --NotebookApp.password="chaillot"'
         # cmd: '/run/start.debug.sh'
+        container_security_context:
+          gid: 1000
+          uid: 1000
   extraEnv:
     JUPYTER_ALLOW_INSECURE_WRITES: "true"
   storage:
@@ -90,9 +93,16 @@ singleuser:
     capacity: 2Gi
     dynamic:
       storageClass: csi-s3
-
+# ---
+# For the moment, I still have the issue that the volume is mounted with root ownership on the workspace folder, so it seems i can't git clone inside workspace folder, permission denied
+hub:
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroupChangePolicy: "OnRootMismatch" 
 EOF
-
+# https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html#kubespawner.KubeSpawner.container_security_context
 # https://z2jh.jupyter.org/en/stable/resources/reference.html#singleuser-storage-homemountpath
 
 
@@ -107,6 +117,7 @@ helm upgrade --cleanup-on-fail \
 
 kubectl get all -n decoderleco
 
+# Ah pour le pb de permission, je pourrais peut-être utiliser un "postStart" avec un chmod comme dans https://github.com/jupyterhub/zero-to-jupyterhub-k8s/issues/1323 
 
 exit 0
 
