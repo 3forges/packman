@@ -84,8 +84,8 @@ singleuser:
         # cmd: 'export PATH="\$HOME/.local/bin:\$PATH" && jupyter lab --unstable=true --ip=0.0.0.0 --NotebookApp.base_url="${JUPYTERHUB_SERVICE_PREFIX}" --NotebookApp.token="" --NotebookApp.password="chaillot"'
         # cmd: '/run/start.debug.sh'
         container_security_context:
-          gid: 1000
-          uid: 1000
+          runAsGroup: 1000
+          runAsUser: 1000
   extraEnv:
     JUPYTER_ALLOW_INSECURE_WRITES: "true"
   storage:
