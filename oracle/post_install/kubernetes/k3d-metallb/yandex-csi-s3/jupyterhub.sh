@@ -86,6 +86,11 @@ singleuser:
         container_security_context:
           runAsGroup: 1000
           runAsUser: 1000
+        podSecurityContext:
+          fsGroup: 1000
+          runAsUser: 1000
+          runAsGroup: 1000
+          fsGroupChangePolicy: "OnRootMismatch" 
   extraEnv:
     JUPYTER_ALLOW_INSECURE_WRITES: "true"
   storage:
@@ -103,6 +108,7 @@ hub:
     fsGroupChangePolicy: "OnRootMismatch" 
 EOF
 # https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html#kubespawner.KubeSpawner.container_security_context
+# https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html#kubespawner.KubeSpawner.pod_security_context
 # https://z2jh.jupyter.org/en/stable/resources/reference.html#singleuser-storage-homemountpath
 
 
