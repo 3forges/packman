@@ -101,7 +101,7 @@ EOF
 # https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html#kubespawner.KubeSpawner.container_security_context
 # https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html#kubespawner.KubeSpawner.pod_security_context
 # https://z2jh.jupyter.org/en/stable/resources/reference.html#singleuser-storage-homemountpath
-
+# https://community.ovh.com/t/pv-are-not-mounted-with-correct-permissions-inside-pods/49379/4
 
 helm upgrade --cleanup-on-fail \
   --install decoderleco-jupyter jupyterhub/jupyterhub \
@@ -229,3 +229,4 @@ EOF
 # https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html#kubespawner.KubeSpawner.container_security_context
 # https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html#kubespawner.KubeSpawner.pod_security_context
 # https://z2jh.jupyter.org/en/stable/resources/reference.html#singleuser-storage-homemountpath
+# https://community.ovh.com/t/pv-are-not-mounted-with-correct-permissions-inside-pods/49379/4
