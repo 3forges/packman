@@ -189,7 +189,8 @@ helm install csi-s3 yandex-s3/csi-s3 \
      --set secret.endpoint=${MINIO_ENDPOINT} \
      --set images.provisioner=${CSI_PROVISIONER_GUN_TO_DEPLOY} \
      --set images.csi=${CSI_DRIVER_GUN_TO_DEPLOY} \
-     --set images.registrar=${CSI_REGISTRAR_GUN_TO_DEPLOY}
+     --set images.registrar=${CSI_REGISTRAR_GUN_TO_DEPLOY} \
+     --set images.registrar=s3fs
 
 
 
