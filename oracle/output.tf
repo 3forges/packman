@@ -31,10 +31,10 @@ output "ubuntu_vm_summary" {
 
 output "minio_root_accesskey" {
   description = "access key as root to the minio storage backend of the csi driver."
-  value       = "${data.local_file.MINIO_CSI_DRIVER_ROOT_USER.content}"
+  value       = data.local_file.MINIO_CSI_DRIVER_ROOT_USER.content
 }
 
 output "minio_root_secretkey" {
   description = "access key as root to the minio storage backend of the csi driver."
-  value       = "${data.local_file.MINIO_CSI_DRIVER_ROOT_PASSWORD.content}"
+  value       = data.local_file.MINIO_CSI_DRIVER_ROOT_PASSWORD.content
 }

@@ -10,7 +10,7 @@
 # ---
 #  
 $Env:TF_LOG = "debug"
-
+$Env:OCI_GO_SDK_DEBUG = "debug"
 
 terraform init
 terraform validate
